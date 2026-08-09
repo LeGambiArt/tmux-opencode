@@ -151,13 +151,18 @@ load_theme() {
 }
 
 # apply_status_style: reads @opencode-theme-status-bg/fg (set by theme)
-# and applies status-style. Skipped when theme does not define colours.
+# and applies status-style. When no theme defines colours (default theme),
+# resets status-style to tmux's own default so previous theme colours
+# do not bleed through on theme switch.
 apply_status_style() {
   local bg fg
   bg="$(get_tmux_option '@opencode-theme-status-bg' '')"
   fg="$(get_tmux_option '@opencode-theme-status-fg' '')"
-  [[ -n "$bg" && -n "$fg" ]] && \
+  if [[ -n "$bg" && -n "$fg" ]]; then
     tmux set-option -g status-style "bg=${bg},fg=${fg}"
+  else
+    tmux set-option -gu status-style
+  fi
 }
 
 # ---------------------------------------------------------------------------
