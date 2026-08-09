@@ -52,7 +52,7 @@ Available themes:
 | `minimal` | Dark bg, cyan text — no progress bar |
 | `redalert` | White bg, red text, heavy-circle bar |
 | `matrix` | True-black bg, bright-green text, heavy-circle bar |
-| `dracula` | Deep-purple bg, cyan text, diamond bar |
+| `diamond` | Deep-purple bg, cyan text, diamond ◆◇ bar |
 | `purple` | Dark bg, light-purple text, rectangular bar |
 
 See the [examples gallery](docs/examples.md) for screenshots of every theme.

@@ -125,14 +125,14 @@ True black, bright-green text, heavy-circle bar. Matrix digital-rain feel.
 
 ---
 
-## dracula
+## diamond
 
-Dracula colour palette (no Dracula plugin required). Deep purple, cyan text,
+Diamond palette. Deep purple, cyan text,
 green diamond bar.
 
-![dracula theme](../img/theme-dracula.png)
+![diamond theme](../img/theme-diamond.png)
 
-    set -g @opencode-tmux-theme "dracula"
+    set -g @opencode-tmux-theme "diamond"
 
 ---
 
