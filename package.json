@@ -1,0 +1,6 @@
+{
+  "name": "tmux-opencode",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "opencode/tmux-opencode.js"
+}
