@@ -5,7 +5,7 @@ that adds an OpenCode status bar to tmux. Displays model, git branch,
 context window usage, session cost, and active session name.
 
 Fully standalone — no theme plugin dependency required. Ships with
-13 built-in themes selected with a single option.
+14 built-in themes selected with a single option.
 
 ## Requirements
 
@@ -41,20 +41,20 @@ Available themes:
 
 | Theme | Look |
 |-------|------|
-| `default` | Plain tmux colours, Nerd Font icons, gradient bar |
-| `classic` | Dark grey bg, white text, block bar |
+| `default` | Plain tmux colours, blue bar, all text inherits terminal fg |
+| `classic` | Dark grey bg, white text, green→yellow→red gradient bar |
 | `forest` | Dark green bg, bright green text, session-aware |
-| `neon-punk` | Black bg, hot-pink text, emoji icons |
-| `darkblue` | Dark navy bg, neon-yellow text, diamond bar |
-| `cyberpunk` | Black bg, magenta+yellow+cyan neon city |
-| `retrowave` | Deep purple bg, pink text, cyan rectangular bar |
+| `neon-punk` | Black bg, hot-pink text, emoji icons — no Nerd Font needed |
+| `darkblue` | Dark navy bg, neon-yellow text, diamond `◆◇` bar |
+| `cyberpunk` | Black bg, magenta+yellow+cyan neon — heavy-circle `▰▱` bar |
+| `retrowave` | Deep purple bg, pink text, cyan rectangular `▮▯` bar |
 | `steel` | Dark bg, steel-blue text, block bar |
 | `orange` | Grey bg, orange text, dot `●○` bar |
 | `minimal` | Dark bg, cyan text — no progress bar |
-| `redalert` | White bg, red text, heavy-circle bar |
-| `matrix` | True-black bg, bright-green text, heavy-circle bar |
-| `diamond` | Deep-purple bg, cyan text, diamond ◆◇ bar |
-| `purple` | Dark bg, light-purple text, rectangular bar |
+| `redalert` | White bg, red text, heavy-circle `▰▱` bar |
+| `matrix` | True-black bg, bright-green text, heavy-circle `▰▱` bar |
+| `diamond` | Deep-purple bg, cyan text, diamond `◆◇` bar |
+| `purple` | Dark bg, light-purple text, rectangular `▮▯` bar |
 
 See the [examples gallery](docs/examples.md) for screenshots of every theme.
 
@@ -113,27 +113,34 @@ Available plugin names: `model`, `branch`, `pct`, `cost`, `session`, `separator`
     set -g @opencode-statusline-bar-empty-color  "colour22"
     set -g @opencode-statusline-bar-width        "12"
 
-Leave `bar-filled-color` unset for the built-in green→yellow→red gradient.
+Each named theme sets its own bar characters and colours. To use the
+built-in green→yellow→red gradient, unset `bar-filled-color`:
+
+    set -gu @opencode-statusline-bar-filled-color
 
 ### Icons
 
-    # Switch to emoji (works without Nerd Fonts)
-    set -g @opencode-statusline-icon-model   "✨"
+Default icons require a [Nerd Font](https://www.nerdfonts.com) installed and
+configured in your terminal emulator. If a glyph renders as a box, use the
+emoji fallback shown below.
+
+    # Switch to emoji fallbacks (works without Nerd Fonts)
+    set -g @opencode-statusline-icon-model   "🔮"
     set -g @opencode-statusline-icon-branch  "🌿"
     set -g @opencode-statusline-icon-bar     "🧠"
-    set -g @opencode-statusline-icon-cost    "💰"
+    set -g @opencode-statusline-icon-cost    "🪙"
     set -g @opencode-statusline-icon-session "💻"
 
     # Hide an icon
     set -g @opencode-statusline-icon-cost ""
 
 | Option | Default glyph | Codepoint | Emoji fallback |
-|--------|--------------|-----------|---------------|
-| `@opencode-statusline-icon-model` | nf-md-globe_model | U+F08E9 | `✨` |
-| `@opencode-statusline-icon-branch` | nf-cod-git_branch | U+EC6F | `🌿` |
+|--------|--------------|-----------|----------------|
+| `@opencode-statusline-icon-model` | nf-md-crystal_ball | U+F1102 | `🔮` |
+| `@opencode-statusline-icon-branch` | nf-md-source_branch | U+F062C | `🌿` |
 | `@opencode-statusline-icon-bar` | nf-fae-brain | U+E28C | `🧠` |
-| `@opencode-statusline-icon-cost` | nf-fa-money_bill | U+F0D6 | `💰` |
-| `@opencode-statusline-icon-session` | nf-cod-terminal_bash | U+EBCA | `💻` |
+| `@opencode-statusline-icon-cost` | nf-md-coin | U+F0DEA | `🪙` |
+| `@opencode-statusline-icon-session` | nf-md-monitor | U+F0379 | `💻` |
 
 ### Other options
 
