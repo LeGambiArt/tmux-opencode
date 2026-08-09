@@ -111,7 +111,7 @@ cleanup_state_dir() {
 }
 
 cleanup_tpm_plugin() {
-  local tpm_plugin_dir="$HOME/.tmux/plugins/tmux-opencode"
+  local tpm_plugin_dir="$PLUGIN_DIR"
   [[ -d "$tpm_plugin_dir" ]] || return
   rm -rf "$tpm_plugin_dir"
   echo "Removed TPM plugin dir: $tpm_plugin_dir"
