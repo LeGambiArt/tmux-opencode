@@ -43,7 +43,7 @@ Available themes:
 |-------|------|
 | `default` | Plain tmux colours, Nerd Font icons, gradient bar |
 | `classic` | Dark grey bg, white text, block bar |
-| `dashboard` | Dark green bg, bright green text, session-aware |
+| `forest` | Dark green bg, bright green text, session-aware |
 | `neon-punk` | Black bg, hot-pink text, emoji icons |
 | `cyberpunk` | Dark navy bg, neon-yellow text, diamond bar |
 | `retrowave` | Deep purple bg, pink text, cyan rectangular bar |

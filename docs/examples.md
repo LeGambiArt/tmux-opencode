@@ -34,13 +34,13 @@ Dark charcoal background, white text, block bar with dynamic gradient.
 
 ---
 
-## dashboard
+## forest
 
 Dark green background, bright-green text. Includes session title.
 
-![dashboard theme](../img/theme-dashboard.png)
+![forest theme](../img/theme-forest.png)
 
-    set -g @opencode-tmux-theme "dashboard"
+    set -g @opencode-tmux-theme "forest"
 
 ---
 
