@@ -1,16 +1,18 @@
-import { writeFile, mkdir } from "fs/promises"
+import fs   from 'fs'
+import path from 'path'
+import os   from 'os'
 
-const STATE_DIR  = `${process.env.HOME ?? ""}/.config/opencode`
-const STATE_PATH = `${STATE_DIR}/statusline-state.sh`
+const STATE_DIR  = path.join(os.homedir(), '.config', 'opencode')
+const STATE_PATH = path.join(STATE_DIR, 'statusline-state.sh')
 
 function shortModelName(modelID) {
-  return modelID.replace(/^claude-/, "").slice(0, 20)
+  return modelID.replace(/^claude-/, '').slice(0, 20)
 }
 
 async function getMessages(client, sessionID) {
   const res = await client.session.messages({ path: { id: sessionID } })
   return (res.data ?? [])
-    .filter((m) => m.info.role === "assistant")
+    .filter((m) => m.info.role === 'assistant')
     .map((m) => m.info)
 }
 
@@ -51,17 +53,17 @@ async function getGitInfo($, directory) {
       await $`git -C ${directory} diff --cached --quiet 2>/dev/null; echo $?`.text()
     ).trim()
     return {
-      branch:  branch || "",
-      dirty:   dirtyExit  !== "0" ? 1 : 0,
-      staged:  stagedExit !== "0" ? 1 : 0,
+      branch:  branch || '',
+      dirty:   dirtyExit  !== '0' ? 1 : 0,
+      staged:  stagedExit !== '0' ? 1 : 0,
     }
   } catch {
-    return { branch: "", dirty: 0, staged: 0 }
+    return { branch: '', dirty: 0, staged: 0 }
   }
 }
 
-async function writeState(state) {
-  await mkdir(STATE_DIR, { recursive: true })
+function writeState(state) {
+  fs.mkdirSync(STATE_DIR, { recursive: true })
   const lines = [
     `MODEL="${state.model}"`,
     `BRANCH="${state.branch}"`,
@@ -71,7 +73,7 @@ async function writeState(state) {
     `COST_USD=${state.costUsd}`,
     `UPDATED_AT=${Math.floor(Date.now() / 1000)}`,
   ]
-  await writeFile(STATE_PATH, lines.join("\n") + "\n", "utf8")
+  fs.writeFileSync(STATE_PATH, lines.join('\n') + '\n', 'utf8')
 }
 
 async function updateStatus(client, $, directory, sessionID) {
@@ -91,7 +93,7 @@ async function updateStatus(client, $, directory, sessionID) {
     client, providerID, modelID, totalTokens
   )
 
-  await writeState({
+  writeState({
     model:      shortModelName(modelID),
     branch:     git.branch,
     dirty:      git.dirty,
@@ -103,7 +105,7 @@ async function updateStatus(client, $, directory, sessionID) {
 
 export const StatuslinePlugin = async ({ client, directory, $ }) => ({
   event: async ({ event }) => {
-    if (event.type !== "session.idle") return
+    if (event.type !== 'session.idle') return
     const { sessionID } = event.properties
     await updateStatus(client, $, directory, sessionID).catch(() => {})
   },

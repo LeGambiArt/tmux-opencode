@@ -11,12 +11,33 @@ get_tmux_option() {
   [[ -z "$value" ]] && echo "$default" || echo "$value"
 }
 
+ensure_esm_package_json() {
+  local dir="$1"
+  local pkg="$dir/package.json"
+
+  [[ -f "$pkg" ]] || { echo '{"type":"module"}' > "$pkg"; return; }
+
+  local type_val
+  type_val="$(jq -r '.type // empty' "$pkg" 2>/dev/null)"
+  [[ "$type_val" == "module" ]] && return
+
+  ! command -v jq &>/dev/null && {
+    echo "Warning: jq not found. Add \"type\":\"module\" to $pkg manually." >&2
+    return
+  }
+
+  local tmp
+  tmp="$(mktemp)"
+  jq '. + {"type":"module"}' "$pkg" > "$tmp" && mv "$tmp" "$pkg"
+}
+
 install_opencode_plugin() {
   local config_dir="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
   local plugin_dir="$config_dir/plugins"
   mkdir -p "$plugin_dir"
-  cp "$PLUGIN_DIR/opencode/statusline-plugin.js" \
-    "$plugin_dir/statusline-plugin.js"
+  ensure_esm_package_json "$plugin_dir"
+  cp "$PLUGIN_DIR/opencode/tmux-opencode.js" \
+    "$plugin_dir/tmux-opencode.js"
 }
 
 detect_dracula() {
