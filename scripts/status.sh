@@ -9,13 +9,13 @@ STATE="$HOME/.config/opencode/plugins/tmux-opencode/statusline-state.sh"
 source "$STATE"
 
 # ---------------------------------------------------------------------------
-# Nerd Font hardcoded fallbacks (emergency only — normally set via default.conf)
+# Nerd Font hardcoded fallbacks (emergency only — set via utils.sh load_theme)
 # ---------------------------------------------------------------------------
-_ICON_MODEL=$'\U000F08E9'    # nf-md-globe_model
-_ICON_BRANCH=$'\uEC6F'       # nf-cod-git_branch
-_ICON_BAR=$'\uE28C'          # nf-fae-brain
-_ICON_COST=$'\uF0D6'         # nf-fa-money_bill
-_ICON_SESSION=$'\uEBCA'      # nf-cod-terminal_bash
+_ICON_MODEL=$'\U000F1102'    # 🔮  nf-md-crystal_ball
+_ICON_BRANCH=$'\U000F062C'   # 🌿  nf-md-source_branch
+_ICON_BAR=$'\uE28C'          # 🧠  nf-fae-brain
+_ICON_COST=$'\uF0D6'         # 💰  nf-fa-money_bill
+_ICON_SESSION=$'\U000F0379'  # 💻  nf-md-monitor
 
 # ---------------------------------------------------------------------------
 # Helpers

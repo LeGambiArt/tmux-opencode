@@ -127,9 +127,18 @@ cleanup_tpm_plugin() {
 load_theme() {
   local theme
   theme="$(get_tmux_option '@opencode-tmux-theme' 'default')"
-  # Step 1: always load defaults
+  # Step 1: always load defaults (colours, bar chars, plugins, separator, etc.)
   tmux source-file "$PLUGIN_DIR/themes/default.conf"
-  # Step 2: load selected theme on top (skipped when theme == "default")
+  # Step 2: set icon defaults via bash — tmux source-file cannot parse
+  # $'\uXXXX' Unicode escape sequences; bash interprets them correctly here.
+  # Named themes that want different icons set the actual UTF-8 glyph directly
+  # (e.g. set -g @opencode-theme-icon-model "✨") and are sourced after these.
+  tmux set-option -g '@opencode-theme-icon-model'   $'\U000F1102'  # 🔮  crystal_ball
+  tmux set-option -g '@opencode-theme-icon-branch'  $'\U000F062C'  # 🌿  source_branch
+  tmux set-option -g '@opencode-theme-icon-bar'     $'\uE28C'      # 🧠  brain
+  tmux set-option -g '@opencode-theme-icon-cost'    $'\uF0D6'      # 💰  money_bill
+  tmux set-option -g '@opencode-theme-icon-session' $'\U000F0379'  # 💻  monitor
+  # Step 3: load selected theme on top (skipped when theme == "default")
   if [[ "$theme" != "default" ]]; then
     local theme_file="$PLUGIN_DIR/themes/${theme}.conf"
     if [[ -f "$theme_file" ]]; then
