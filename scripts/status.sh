@@ -244,7 +244,16 @@ render() {
   # Restore theme bg in separator so per-plugin bg blocks are visually separated.
   local sep_bg_reset=""
   [[ -n "$theme_bg" ]] && sep_bg_reset="#[bg=${theme_bg}]"
-  local sep_str="${sep_bg_reset}#[fg=${sep_fg}] ${separator} "
+  # When separator contains only whitespace (or is empty), skip the pipe
+  # character and surrounding spaces — just reset bg with the separator value.
+  # This allows themes like circle (separator=" ") to produce a minimal gap
+  # instead of the full " │ " treatment.
+  local sep_str
+  if [[ -n "${separator// }" ]]; then
+    sep_str="${sep_bg_reset}#[fg=${sep_fg}] ${separator} "
+  else
+    sep_str="${sep_bg_reset}${separator}"
+  fi
 
   local out="" i
   for (( i=0; i<${#parts[@]}; i++ )); do
