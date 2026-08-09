@@ -105,6 +105,26 @@ set -g @opencode-theme-plugins "model branch progressbar percentage cost"
 | `@opencode-theme-session-max-len` | `20` | Session title max chars |
 | `@opencode-theme-refresh` | `5` | Refresh interval (seconds) |
 
+### Available `@opencode-statusline-*` user options
+
+These override their theme counterpart when set. Use these in `~/.tmux.conf`.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `@opencode-statusline-order` | `"append"` | Injection point in status-right: `"append"` (rightmost) or `"prepend"` (leftmost) |
+| `@opencode-statusline-refresh` | `5` | Refresh interval in seconds |
+| `@opencode-statusline-plugins` | *(theme value)* | Override plugin list |
+| `@opencode-statusline-fg` | *(theme value)* | Global fg override |
+| `@opencode-statusline-bg` | *(theme value)* | Global bg override |
+| `@opencode-statusline-<plugin>-fg` | *(theme value)* | Per-plugin fg override |
+| `@opencode-statusline-<plugin>-bg` | *(theme value)* | Per-plugin bg override |
+| `@opencode-statusline-session-max-len` | `20` | Session title max chars |
+| `@opencode-statusline-icon-model` | *(NF glyph)* | Model icon override |
+| `@opencode-statusline-icon-branch` | *(NF glyph)* | Branch icon override |
+| `@opencode-statusline-icon-bar` | *(NF glyph)* | Progress bar icon override |
+| `@opencode-statusline-icon-cost` | *(NF glyph)* | Cost icon override |
+| `@opencode-statusline-icon-session` | *(NF glyph)* | Session icon override |
+
 ### Testing your theme locally
 
 ```bash

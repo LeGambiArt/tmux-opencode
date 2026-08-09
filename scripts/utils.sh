@@ -219,10 +219,18 @@ apply_status_style() {
 # tmux status bar setup and teardown
 # ---------------------------------------------------------------------------
 
-# setup_status_bar: APPENDS to status-right — never replaces.
-# Cooperates with battery, cpu, powerline, and other status-right consumers.
+# setup_status_bar: injects status.sh into status-right.
+# Placement is controlled by @opencode-statusline-order:
+#   "append"  (default) — adds to the end   → opencode is rightmost
+#   "prepend"           — adds to the front  → opencode is leftmost within status-right
+#
+# When using with tmux-dracula or other plugins that rebuild status-right from
+# scratch, list opencode AFTER those plugins in your tmux.conf so it runs last
+# and sees the final status-right value before injecting.
 setup_status_bar() {
   local script="$PLUGIN_DIR/scripts/status.sh"
+  local order
+  order="$(get_tmux_option '@opencode-statusline-order' 'append')"
   local current_right
   current_right="$(tmux show-option -gv 'status-right' 2>/dev/null || true)"
   # Match ANY tmux-opencode status.sh entry, not just the current PLUGIN_DIR
@@ -230,7 +238,11 @@ setup_status_bar() {
   # matching by content pattern prevents duplicate entries from both paths
   # being registered independently.
   [[ "$current_right" == *"tmux-opencode"*"status.sh"* ]] && return
-  tmux set-option -ga status-right " #($script)"
+  if [[ "$order" == "prepend" ]]; then
+    tmux set-option -g  status-right "#($script) ${current_right}"
+  else
+    tmux set-option -ga status-right " #($script)"
+  fi
   tmux set-option -g  status-right-length 200
 }
 

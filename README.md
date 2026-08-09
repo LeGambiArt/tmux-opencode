@@ -65,14 +65,32 @@ See the [examples gallery](docs/examples.md) for screenshots of every theme.
 All options go in `~/.tmux.conf`. Theme settings take effect on the next
 `tmux source-file ~/.tmux.conf` (or `prefix + I` reinstall).
 
-### Cooperating with other status-right plugins
+### Placement within status-right
 
-The plugin **appends** to your existing `status-right` — it never replaces it.
-Battery, cpu, date/time, powerline, and other plugins remain untouched:
+By default the plugin **appends** to `status-right` — opencode lands at the
+rightmost position. Use `@opencode-statusline-order "prepend"` to move it to
+the leftmost position within the right bar instead:
 
-    # Your existing status-right content is preserved
-    set -g status-right "#{battery_icon} #{cpu_percentage}%  %H:%M"
-    # tmux-opencode appends its segment automatically
+    set -g @opencode-statusline-order "prepend"   # opencode first, then other segments
+
+**Example — tmux-dracula with its time segment at the far-right edge:**
+
+    # In ~/.tmux.conf, load dracula BEFORE opencode:
+    set -g @dracula-plugins "cpu-usage battery time"
+    run "~/.tmux/plugins/tmux-dracula/dracula.tmux"
+    # Now load opencode with prepend — it inserts before dracula's segments:
+    set -g @opencode-statusline-order "prepend"
+    run "~/.tmux/plugins/tmux-opencode/opencode-statusline.tmux"
+    # Result: [opencode][cpu-usage][battery][time]  ← time stays at far right
+
+> **Load order matters.** Plugins that rebuild `status-right` from scratch
+> (tmux-dracula does this) will erase an earlier prepend. List tmux-opencode
+> after such plugins in your `~/.tmux.conf` so it sees the final `status-right`
+> value before injecting.
+
+Battery, cpu, date/time, and other append-only plugins cooperate automatically
+regardless of `order` — tmux-opencode never replaces `status-right`, only
+adds to it.
 
 ### Override individual colours
 
