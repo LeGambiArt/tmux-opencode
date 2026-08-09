@@ -1,0 +1,10 @@
+# Superpowers AI planning artifacts — not part of the project
+docs/superpowers/
+
+# Editor and OS artifacts
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
