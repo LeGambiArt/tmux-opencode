@@ -9,20 +9,67 @@ STATE="$HOME/.config/opencode/plugins/tmux-opencode/statusline-state.sh"
 source "$STATE"
 
 # ---------------------------------------------------------------------------
-# Nerd Font glyph defaults — requires a Nerd Font installed and configured
-# If a glyph appears as a box or question mark, copy the emoji shown in the
-# comment and use it as your tmux option value instead, for example:
-#   set -g @opencode-statusline-icon-model "✨"
+# Nerd Font hardcoded fallbacks (emergency only — normally set via default.conf)
 # ---------------------------------------------------------------------------
-DEFAULT_ICON_MODEL=$'\U000F08E9'    # ✨  nf-md-globe_model
-DEFAULT_ICON_BRANCH=$'\uEC6F'       # 🌿  nf-cod-git_branch
-DEFAULT_ICON_BAR=$'\uE28C'          # 🧠  nf-fae-brain
-DEFAULT_ICON_COST=$'\uEFC8'         # 💰  nf-fa-money_bill_1_wave
-DEFAULT_ICON_SESSION=$'\uEBCA'      # 💻  nf-cod-terminal_bash  (alt: $'\uF489' nf-oct-terminal)
+_ICON_MODEL=$'\U000F08E9'    # nf-md-globe_model
+_ICON_BRANCH=$'\uEC6F'       # nf-cod-git_branch
+_ICON_BAR=$'\uE28C'          # nf-fae-brain
+_ICON_COST=$'\uF0D6'         # nf-fa-money_bill
+_ICON_SESSION=$'\uEBCA'      # nf-cod-terminal_bash
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+tmux_opt() {
+  local key="$1" default="${2:-}"
+  local val
+  val="$(tmux show-option -gqv "$key" 2>/dev/null || true)"
+  [[ -n "$val" ]] && printf '%s' "$val" || printf '%s' "$default"
+}
+
+# resolve_opt: user key → theme key → hardcoded fallback
+# Use for non-colour options: icons, chars, plugin list, separator.
+resolve_opt() {
+  local user_key="$1" theme_key="$2" fallback="$3"
+  local val
+  val="$(tmux_opt "$user_key" '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  val="$(tmux_opt "$theme_key" '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  printf '%s' "$fallback"
+}
+
+# resolve_fg: per-plugin user → global user → per-plugin theme → global theme → fallback
+# plugin: e.g. "model", "branch", "pct", "cost", "session"
+resolve_fg() {
+  local p="$1" fb="$2"
+  local val
+  val="$(tmux_opt "@opencode-statusline-${p}-fg" '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  val="$(tmux_opt "@opencode-statusline-fg"       '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  val="$(tmux_opt "@opencode-theme-${p}-fg"       '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  val="$(tmux_opt "@opencode-theme-fg"            '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  printf '%s' "$fb"
+}
+
+# resolve_bg: same chain for background colours
+resolve_bg() {
+  local p="$1" fb="$2"
+  local val
+  val="$(tmux_opt "@opencode-statusline-${p}-bg" '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  val="$(tmux_opt "@opencode-statusline-bg"       '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  val="$(tmux_opt "@opencode-theme-${p}-bg"       '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  val="$(tmux_opt "@opencode-theme-bg"            '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  printf '%s' "$fb"
+}
+
+# global_fg: user global → theme global → fallback
+# Used to restore text colour after progress bar overwrites fg.
+global_fg() {
+  local fb="${1:-colour255}"
+  local val
+  val="$(tmux_opt '@opencode-statusline-fg' '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  val="$(tmux_opt '@opencode-theme-fg'      '')"; [[ -n "$val" ]] && { printf '%s' "$val"; return; }
+  printf '%s' "$fb"
+}
 
 is_stale() {
   local now
@@ -37,9 +84,9 @@ build_marks() {
   echo "$marks"
 }
 
+# build_bar: emits inline #[fg=...] codes for filled and empty portions.
+# Does NOT append #[default] — caller restores text colour explicitly.
 build_bar() {
-  # build_bar pct width filled_char empty_char filled_color empty_color
-  # Emits inline #[fg=...] tmux style codes so each half has its own colour.
   local pct="${1:-0}"         width="${2:-10}"
   local filled_char="${3:-█}" empty_char="${4:-░}"
   local filled_color="${5:-}" empty_color="${6:-colour236}"
@@ -54,8 +101,7 @@ build_bar() {
     bar+="#[fg=${empty_color}]"
     for (( i=0; i<empty; i++ )); do bar+="${empty_char}"; done
   fi
-  bar+="#[default]"
-  echo "$bar"
+  printf '%s' "$bar"
 }
 
 bar_color() {
@@ -70,83 +116,105 @@ format_cost() {
   printf "%.2f" "${1:-0}"
 }
 
-tmux_opt() {
-  local key="$1" default="${2:-}"
-  local val
-  val="$(tmux show-option -gqv "$key" 2>/dev/null || true)"
-  [[ -n "$val" ]] && echo "$val" || echo "$default"
-}
-
 # ---------------------------------------------------------------------------
 # Render
 # ---------------------------------------------------------------------------
 
 render() {
-  # --- read all options up front ---
-  local plugins bar_width session_max
+  local plugins bar_width session_max separator
+
+  plugins="$(resolve_opt \
+    '@opencode-statusline-plugins' \
+    '@opencode-theme-plugins' \
+    'model branch progressbar percentage cost')"
+  bar_width="$(resolve_opt \
+    '@opencode-statusline-bar-width' \
+    '@opencode-theme-bar-width' '10')"
+  session_max="$(resolve_opt \
+    '@opencode-statusline-session-max-len' \
+    '@opencode-theme-session-max-len' '20')"
+  separator="$(resolve_opt \
+    '@opencode-statusline-separator' \
+    '@opencode-theme-separator' '│')"
+
   local icon_model icon_branch icon_bar icon_cost icon_session
+  icon_model="$(resolve_opt \
+    '@opencode-statusline-icon-model'   '@opencode-theme-icon-model'   "$_ICON_MODEL")"
+  icon_branch="$(resolve_opt \
+    '@opencode-statusline-icon-branch'  '@opencode-theme-icon-branch'  "$_ICON_BRANCH")"
+  icon_bar="$(resolve_opt \
+    '@opencode-statusline-icon-bar'     '@opencode-theme-icon-bar'     "$_ICON_BAR")"
+  icon_cost="$(resolve_opt \
+    '@opencode-statusline-icon-cost'    '@opencode-theme-icon-cost'    "$_ICON_COST")"
+  icon_session="$(resolve_opt \
+    '@opencode-statusline-icon-session' '@opencode-theme-icon-session' "$_ICON_SESSION")"
 
-  plugins="$(tmux_opt    '@opencode-statusline-plugins'        'model branch progressbar percentage cost')"
-  bar_width="$(tmux_opt  '@opencode-statusline-bar-width'      '10')"
-  session_max="$(tmux_opt '@opencode-statusline-session-max-len' '20')"
-
-  icon_model="$(tmux_opt   '@opencode-statusline-icon-model'   "$DEFAULT_ICON_MODEL")"
-  icon_branch="$(tmux_opt  '@opencode-statusline-icon-branch'  "$DEFAULT_ICON_BRANCH")"
-  icon_bar="$(tmux_opt     '@opencode-statusline-icon-bar'     "$DEFAULT_ICON_BAR")"
-  icon_cost="$(tmux_opt    '@opencode-statusline-icon-cost'    "$DEFAULT_ICON_COST")"
-  icon_session="$(tmux_opt '@opencode-statusline-icon-session' "$DEFAULT_ICON_SESSION")"
-
-  # --- build parts ---
   local parts=()
-  local plugin color bar marks cost_fmt name title
+  local plugin bar marks cost_fmt name title fg
 
   for plugin in $plugins; do
     case "$plugin" in
       model)
+        fg="$(resolve_fg 'model' 'colour87')"
         name="${MODEL_DISPLAY:-${MODEL:-opencode}}"
-        parts+=("#[fg=colour87]${icon_model} ${name}#[default]")
+        parts+=("#[fg=${fg}]${icon_model} ${name}#[default]")
         ;;
       branch)
         [[ -n "${BRANCH:-}" ]] || continue
+        fg="$(resolve_fg 'branch' 'colour141')"
         marks="$(build_marks)"
-        parts+=("#[fg=colour141]${icon_branch} ${BRANCH}${marks}#[default]")
+        parts+=("#[fg=${fg}]${icon_branch} ${BRANCH}${marks}#[default]")
         ;;
       progressbar)
         local fill_color empty_color filled_char empty_char
-        fill_color="$(tmux_opt '@opencode-statusline-bar-filled-color' '')"
+        fill_color="$(resolve_opt \
+          '@opencode-statusline-bar-filled-color' \
+          '@opencode-theme-bar-filled-color' '')"
         [[ -z "$fill_color" ]] && fill_color="$(bar_color "${CONTEXT_PCT:-0}")"
-        empty_color="$(tmux_opt '@opencode-statusline-bar-empty-color' 'colour236')"
-        filled_char="$(tmux_opt '@opencode-statusline-bar-filled-char' '█')"
-        empty_char="$(tmux_opt  '@opencode-statusline-bar-empty-char'  '░')"
+        empty_color="$(resolve_opt \
+          '@opencode-statusline-bar-empty-color' \
+          '@opencode-theme-bar-empty-color' 'colour236')"
+        filled_char="$(resolve_opt \
+          '@opencode-statusline-bar-filled-char' \
+          '@opencode-theme-bar-filled-char' '█')"
+        empty_char="$(resolve_opt \
+          '@opencode-statusline-bar-empty-char' \
+          '@opencode-theme-bar-empty-char' '░')"
         bar="$(build_bar "${CONTEXT_PCT:-0}" "$bar_width" \
                "$filled_char" "$empty_char" "$fill_color" "$empty_color")"
-        parts+=("${icon_bar} ${bar}")
+        # Restore global text colour after bar's inline colour codes
+        parts+=("${icon_bar} ${bar}#[fg=$(global_fg 'colour255')]")
         ;;
       percentage)
-        color="$(bar_color "${CONTEXT_PCT:-0}")"
-        parts+=("#[fg=${color}]${CONTEXT_PCT:-0}%%#[default]")
+        fg="$(resolve_fg 'pct' "$(bar_color "${CONTEXT_PCT:-0}")")"
+        # Single % — tmux does NOT strftime-expand #(command) output
+        parts+=("#[fg=${fg}]${CONTEXT_PCT:-0}%#[default]")
         ;;
       cost)
+        fg="$(resolve_fg 'cost' 'colour114')"
         cost_fmt="$(format_cost "${COST_USD:-0}")"
-        parts+=("#[fg=colour114]${icon_cost} \$${cost_fmt}#[default]")
+        parts+=("#[fg=${fg}]${icon_cost} \$${cost_fmt}#[default]")
         ;;
       session)
         [[ -n "${SESSION_TITLE:-}" ]] || continue
+        fg="$(resolve_fg 'session' 'colour243')"
         title="${SESSION_TITLE:0:$session_max}"
         if [[ "${#SESSION_TITLE}" -gt "$session_max" ]]; then
           title="${title}…"
         fi
-        parts+=("#[fg=colour243]${icon_session} ${title}#[default]")
+        parts+=("#[fg=${fg}]${icon_session} ${title}#[default]")
         ;;
       *) continue ;;
     esac
   done
 
-  # --- join with separator ---
-  local sep="#[fg=colour243] │ #[default]"
+  local sep_fg
+  sep_fg="$(resolve_fg 'separator' 'colour243')"
+  local sep_str="#[fg=${sep_fg}] ${separator} #[default]"
+
   local out="" i
   for (( i=0; i<${#parts[@]}; i++ )); do
-    if [[ $i -gt 0 ]]; then out+="$sep"; fi
+    [[ $i -gt 0 ]] && out+="$sep_str"
     out+="${parts[$i]}"
   done
 
