@@ -55,13 +55,13 @@ No Nerd Font required for icons.
 
 ---
 
-## cyberpunk
+## darkblue
 
 Dark navy, neon-yellow text, diamond bar. Night-city aesthetic.
 
-![cyberpunk theme](../img/theme-cyberpunk.png)
+![darkblue theme](../img/theme-darkblue.png)
 
-    set -g @opencode-tmux-theme "cyberpunk"
+    set -g @opencode-tmux-theme "darkblue"
 
 ---
 
@@ -162,3 +162,15 @@ Override any individual setting after setting the theme:
     set -g @opencode-statusline-icon-model "✨"
 
 User options (`@opencode-statusline-*`) always override theme defaults.
+
+---
+
+## cyberpunk
+
+True black background, hot-magenta text, neon-yellow `▰▱` bar, electric-cyan branch.
+Classic cyberpunk neon city palette: magenta + yellow + cyan.
+
+![cyberpunk theme](../img/theme-cyberpunk.png)
+
+    set -g @opencode-tmux-theme "cyberpunk"
+

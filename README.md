@@ -45,7 +45,8 @@ Available themes:
 | `classic` | Dark grey bg, white text, block bar |
 | `forest` | Dark green bg, bright green text, session-aware |
 | `neon-punk` | Black bg, hot-pink text, emoji icons |
-| `cyberpunk` | Dark navy bg, neon-yellow text, diamond bar |
+| `darkblue` | Dark navy bg, neon-yellow text, diamond bar |
+| `cyberpunk` | Black bg, magenta+yellow+cyan neon city |
 | `retrowave` | Deep purple bg, pink text, cyan rectangular bar |
 | `steel` | Dark bg, steel-blue text, block bar |
 | `orange` | Grey bg, orange text, dot `●○` bar |
