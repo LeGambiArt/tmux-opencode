@@ -118,6 +118,55 @@ cleanup_tpm_plugin() {
 }
 
 # ---------------------------------------------------------------------------
+# User option cleanup
+# ---------------------------------------------------------------------------
+
+# clean_user_options: unsets all @opencode-statusline-* options from tmux
+# memory. Use when migrating from manually-configured preset options to the
+# @opencode-tmux-theme system so old values don't override the selected theme.
+# Run: ~/.tmux/plugins/tmux-opencode/opencode-statusline.tmux clean
+clean_user_options() {
+  local colour_opts=(
+    fg bg
+    model-fg   model-bg
+    branch-fg  branch-bg
+    pct-fg     pct-bg
+    cost-fg    cost-bg
+    session-fg session-bg
+    bar-fg     bar-bg
+    separator-fg
+    left-edge-fg right-edge-fg
+  )
+  for opt in "${colour_opts[@]}"; do
+    tmux set-option -gu "@opencode-statusline-${opt}" 2>/dev/null || true
+  done
+
+  local bar_opts=(
+    bar-filled-color bar-empty-color
+    bar-filled-char  bar-empty-char
+    bar-width
+  )
+  for opt in "${bar_opts[@]}"; do
+    tmux set-option -gu "@opencode-statusline-${opt}" 2>/dev/null || true
+  done
+
+  local icon_opts=(
+    icon-model icon-branch icon-bar icon-cost icon-session
+  )
+  for opt in "${icon_opts[@]}"; do
+    tmux set-option -gu "@opencode-statusline-${opt}" 2>/dev/null || true
+  done
+
+  local general_opts=(
+    plugins refresh separator session-max-len text-color
+    left-edge right-edge
+  )
+  for opt in "${general_opts[@]}"; do
+    tmux set-option -gu "@opencode-statusline-${opt}" 2>/dev/null || true
+  done
+}
+
+# ---------------------------------------------------------------------------
 # Theme loading
 # ---------------------------------------------------------------------------
 

@@ -275,6 +275,35 @@ render() {
     out+="${parts[$i]}"
   done
 
+  # ── Edge glyphs ─────────────────────────────────────────────────────────────
+  # Left edge: rendered before the first segment to avoid collision with
+  # adjacent status-right content (clock, window list, etc.).
+  # Right edge: rendered after the last segment as a visual closing boundary.
+  # FG colour resolves: @opencode-statusline-*-edge-fg → @opencode-theme-*-edge-fg → sep_fg
+  local left_edge right_edge
+  left_edge="$(tmux show-option -gqv '@opencode-statusline-left-edge'  2>/dev/null || \
+               tmux show-option -gqv '@opencode-theme-left-edge'        2>/dev/null || true)"
+  right_edge="$(tmux show-option -gqv '@opencode-statusline-right-edge' 2>/dev/null || \
+                tmux show-option -gqv '@opencode-theme-right-edge'       2>/dev/null || true)"
+
+  if [[ -n "$left_edge" ]]; then
+    local le_fg
+    le_fg="$(tmux show-option -gqv '@opencode-statusline-left-edge-fg' 2>/dev/null || \
+             tmux show-option -gqv '@opencode-theme-left-edge-fg'       2>/dev/null || \
+             echo "$sep_fg")"
+    local le_bg_reset=""
+    [[ -n "$theme_bg" ]] && le_bg_reset="#[bg=${theme_bg}]"
+    out="${le_bg_reset}#[fg=${le_fg}]${left_edge}${out}"
+  fi
+
+  if [[ -n "$right_edge" ]]; then
+    local re_fg
+    re_fg="$(tmux show-option -gqv '@opencode-statusline-right-edge-fg' 2>/dev/null || \
+             tmux show-option -gqv '@opencode-theme-right-edge-fg'       2>/dev/null || \
+             echo "$sep_fg")"
+    out+="#[bg=default]#[fg=${re_fg}]${right_edge}#[bg=default]"
+  fi
+
   printf '%s' "${prefix}${out}"
 }
 

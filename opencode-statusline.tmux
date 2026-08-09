@@ -25,12 +25,21 @@ uninstall() {
   echo "  tmux source-file ~/.tmux.conf"
 }
 
+clean() {
+  clean_user_options
+  echo ""
+  echo "Cleared all @opencode-statusline-* overrides from tmux memory."
+  echo "Active theme settings from @opencode-tmux-theme now take full effect."
+  echo "Reload tmux or run prefix + I to re-apply the selected theme."
+}
+
 main() {
   local cmd="${1:-install}"
   case "$cmd" in
     install)   install ;;
     uninstall) uninstall ;;
-    *) echo "Usage: $(basename "$0") [install|uninstall]" >&2; exit 1 ;;
+    clean)     clean ;;
+    *) echo "Usage: $(basename "$0") [install|uninstall|clean]" >&2; exit 1 ;;
   esac
 }
 
