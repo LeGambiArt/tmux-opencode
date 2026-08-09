@@ -191,7 +191,19 @@ async function updateStatus(client, $, directory, sessionID) {
   }
 
   const latest = messages[messages.length - 1]
-  const { modelID, providerID } = latest
+
+  // Walk backwards to find the most recent message with valid model info.
+  // The current streaming/thinking message may not have providerID/modelID
+  // set yet — using it would cause getModelInfo to fail (no windowSize →
+  // contextPct = 0). Previous completed messages always have valid IDs.
+  let modelRef = latest
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].providerID && messages[i].modelID) {
+      modelRef = messages[i]
+      break
+    }
+  }
+  const { modelID, providerID } = modelRef
 
   const [costUsd, contextTokens] = await Promise.all([
     getTotalCost(messages),
