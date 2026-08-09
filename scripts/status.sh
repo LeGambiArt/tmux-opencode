@@ -149,21 +149,29 @@ render() {
   icon_session="$(resolve_opt \
     '@opencode-statusline-icon-session' '@opencode-theme-icon-session' "$_ICON_SESSION")"
 
+  # Anchor the background for our entire segment.
+  # Any inline #[bg=...] from preceding status-right content is overridden here,
+  # ensuring the theme's background applies consistently across all plugins.
+  # When no theme bg is set (default theme) the prefix is empty — no-op.
+  local theme_bg prefix=""
+  theme_bg="$(tmux_opt '@opencode-theme-status-bg' '')"
+  [[ -n "$theme_bg" ]] && prefix="#[bg=${theme_bg}]"
+
   local parts=()
-  local plugin bar marks cost_fmt name title fg
+  local plugin bar marks cost_fmt name title fg text_color
 
   for plugin in $plugins; do
     case "$plugin" in
       model)
         fg="$(resolve_fg 'model' 'colour87')"
         name="${MODEL_DISPLAY:-${MODEL:-opencode}}"
-        parts+=("#[fg=${fg}]${icon_model} ${name}#[default]")
+        parts+=("#[fg=${fg}]${icon_model} ${name}")
         ;;
       branch)
         [[ -n "${BRANCH:-}" ]] || continue
         fg="$(resolve_fg 'branch' 'colour141')"
         marks="$(build_marks)"
-        parts+=("#[fg=${fg}]${icon_branch} ${BRANCH}${marks}#[default]")
+        parts+=("#[fg=${fg}]${icon_branch} ${BRANCH}${marks}")
         ;;
       progressbar)
         local fill_color empty_color filled_char empty_char
@@ -182,18 +190,20 @@ render() {
           '@opencode-theme-bar-empty-char' '░')"
         bar="$(build_bar "${CONTEXT_PCT:-0}" "$bar_width" \
                "$filled_char" "$empty_char" "$fill_color" "$empty_color")"
-        # Restore global text colour after bar's inline colour codes
-        parts+=("${icon_bar} ${bar}#[fg=$(global_fg 'colour255')]")
+        # Restore global text colour after bar's two-colour inline codes.
+        # bg is preserved via the prefix anchor set above.
+        text_color="$(global_fg 'colour255')"
+        parts+=("${icon_bar} ${bar}#[fg=${text_color}]")
         ;;
       percentage)
         fg="$(resolve_fg 'pct' "$(bar_color "${CONTEXT_PCT:-0}")")"
         # Single % — tmux does NOT strftime-expand #(command) output
-        parts+=("#[fg=${fg}]${CONTEXT_PCT:-0}%#[default]")
+        parts+=("#[fg=${fg}]${CONTEXT_PCT:-0}%")
         ;;
       cost)
         fg="$(resolve_fg 'cost' 'colour114')"
         cost_fmt="$(format_cost "${COST_USD:-0}")"
-        parts+=("#[fg=${fg}]${icon_cost} \$${cost_fmt}#[default]")
+        parts+=("#[fg=${fg}]${icon_cost} \$${cost_fmt}")
         ;;
       session)
         [[ -n "${SESSION_TITLE:-}" ]] || continue
@@ -202,7 +212,7 @@ render() {
         if [[ "${#SESSION_TITLE}" -gt "$session_max" ]]; then
           title="${title}…"
         fi
-        parts+=("#[fg=${fg}]${icon_session} ${title}#[default]")
+        parts+=("#[fg=${fg}]${icon_session} ${title}")
         ;;
       *) continue ;;
     esac
@@ -210,7 +220,8 @@ render() {
 
   local sep_fg
   sep_fg="$(resolve_fg 'separator' 'colour243')"
-  local sep_str="#[fg=${sep_fg}] ${separator} #[default]"
+  # No trailing colour reset — bg anchor from prefix keeps the theme background.
+  local sep_str="#[fg=${sep_fg}] ${separator} "
 
   local out="" i
   for (( i=0; i<${#parts[@]}; i++ )); do
@@ -218,7 +229,7 @@ render() {
     out+="${parts[$i]}"
   done
 
-  printf '%s' "$out"
+  printf '%s' "${prefix}${out}"
 }
 
 main() {
