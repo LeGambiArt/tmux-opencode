@@ -10,6 +10,7 @@ context window usage, and session cost. Supports raw tmux and the
 - [OpenCode](https://opencode.ai) ≥ 1.18
 - tmux ≥ 3.0
 - bash ≥ 4.0
+- jq ≥ 1.6
 
 ## Install
 
