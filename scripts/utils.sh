@@ -4,7 +4,7 @@ set -euo pipefail
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PLUGIN_DIR="$( cd "$CURRENT_DIR/.." && pwd )"
 
-readonly PLUGIN_SPEC="tmux-opencode@git+https://github.com/mrbrandao/tmux-opencode.git"
+readonly PLUGIN_SPEC="tmux-opencode@git+https://github.com/LeGambiArt/tmux-opencode.git"
 readonly OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
 readonly OPENCODE_CACHE_DIR="${OPENCODE_CACHE_DIR:-$HOME/.cache/opencode}"
 
@@ -118,57 +118,67 @@ cleanup_tpm_plugin() {
 }
 
 # ---------------------------------------------------------------------------
+# Theme loading
+# ---------------------------------------------------------------------------
+
+# load_theme: always sources themes/default.conf first (sets all defaults),
+# then sources the selected theme (overrides only what it defines).
+# If theme is "default", only default.conf is sourced.
+load_theme() {
+  local theme
+  theme="$(get_tmux_option '@opencode-tmux-theme' 'default')"
+  # Step 1: always load defaults
+  tmux source-file "$PLUGIN_DIR/themes/default.conf"
+  # Step 2: load selected theme on top (skipped when theme == "default")
+  if [[ "$theme" != "default" ]]; then
+    local theme_file="$PLUGIN_DIR/themes/${theme}.conf"
+    if [[ -f "$theme_file" ]]; then
+      tmux source-file "$theme_file"
+    else
+      tmux display-message \
+        "opencode-statusline: unknown theme '${theme}', using default"
+    fi
+  fi
+}
+
+# apply_status_style: reads @opencode-theme-status-bg/fg (set by theme)
+# and applies status-style. Skipped when theme does not define colours.
+apply_status_style() {
+  local bg fg
+  bg="$(get_tmux_option '@opencode-theme-status-bg' '')"
+  fg="$(get_tmux_option '@opencode-theme-status-fg' '')"
+  [[ -n "$bg" && -n "$fg" ]] && \
+    tmux set-option -g status-style "bg=${bg},fg=${fg}"
+}
+
+# ---------------------------------------------------------------------------
 # tmux status bar setup and teardown
 # ---------------------------------------------------------------------------
 
-detect_dracula() {
-  local paths=(
-    "$HOME/.tmux/plugins/tmux/scripts"
-    "$HOME/.tmux/plugins/dracula/scripts"
-    "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins/tmux/scripts"
-    "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins/dracula/scripts"
-  )
-  local p
-  for p in "${paths[@]}"; do
-    [[ -d "$p" ]] && echo "$p" && return 0
-  done
-  return 1
-}
-
+# setup_status_bar: APPENDS to status-right — never replaces.
+# Cooperates with battery, cpu, powerline, and other status-right consumers.
 setup_status_bar() {
-  local dracula_dir
-  if dracula_dir="$(detect_dracula)"; then
-    cp "$PLUGIN_DIR/scripts/dracula-segment.sh" \
-      "$dracula_dir/opencode-statusline"
-    chmod +x "$dracula_dir/opencode-statusline"
-    tmux display-message \
-      "opencode-statusline: add 'custom:opencode-statusline' to @dracula-plugins"
-    return
-  fi
   local script="$PLUGIN_DIR/scripts/status.sh"
   local current_right
-  current_right="$(tmux show-option -gv "status-right" 2>/dev/null || true)"
+  current_right="$(tmux show-option -gv 'status-right' 2>/dev/null || true)"
+  # Idempotent: skip if the script is already in status-right
   [[ "$current_right" == *"$script"* ]] && return
   tmux set-option -ga status-right " #($script)"
-  tmux set-option -g status-right-length 200
+  tmux set-option -g  status-right-length 200
 }
 
 teardown_status_bar() {
-  local dracula_dir
-  if dracula_dir="$(detect_dracula)"; then
-    rm -f "$dracula_dir/opencode-statusline"
-    return
-  fi
   local script="$PLUGIN_DIR/scripts/status.sh"
   local entry=" #($script)"
   local current_right
-  current_right="$(tmux show-option -gv "status-right" 2>/dev/null || true)"
+  current_right="$(tmux show-option -gv 'status-right' 2>/dev/null || true)"
   [[ "$current_right" == *"$script"* ]] || return
   tmux set-option -g status-right "${current_right/$entry/}"
 }
 
 set_refresh_interval() {
   local interval
-  interval="$(get_tmux_option "@opencode-statusline-refresh" "5")"
+  interval="$(get_tmux_option '@opencode-statusline-refresh' \
+              "$(get_tmux_option '@opencode-theme-refresh' '5')")"
   tmux set-option -g status-interval "$interval"
 }

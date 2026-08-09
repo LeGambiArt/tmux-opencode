@@ -7,6 +7,8 @@ source "$CURRENT_DIR/scripts/utils.sh"
 
 install() {
   register_opencode_plugin
+  load_theme
+  apply_status_style
   setup_status_bar
   set_refresh_interval
 }
