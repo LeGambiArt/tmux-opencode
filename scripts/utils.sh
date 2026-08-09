@@ -136,6 +136,7 @@ clean_user_options() {
     bar-fg     bar-bg
     separator-fg
     left-edge-fg right-edge-fg
+    left-edge-bg right-edge-bg
   )
   for opt in "${colour_opts[@]}"; do
     tmux set-option -gu "@opencode-statusline-${opt}" 2>/dev/null || true

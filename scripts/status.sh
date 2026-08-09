@@ -305,16 +305,24 @@ render() {
     '@opencode-theme-right-edge' '')"
 
   if [[ -n "$left_edge" ]]; then
-    local le_fg le_bg_reset=""
+    local le_fg le_bg
     le_fg="$(resolve_fg 'left-edge' "$sep_fg")"
-    [[ -n "$theme_bg" ]] && le_bg_reset="#[bg=${theme_bg}]"
-    out="${le_bg_reset}#[fg=${le_fg}]${left_edge}${out}"
+    # BG for the left-edge glyph cell: the "empty" side of the triangle must
+    # match what is adjacent to the left in the status bar (clock, other plugins,
+    # terminal bg). Defaults to "default" (inherit) so it blends naturally.
+    # Override: set -g @opencode-statusline-left-edge-bg "colour234"
+    le_bg="$(tmux_opt '@opencode-statusline-left-edge-bg' \
+             "$(tmux_opt '@opencode-theme-left-edge-bg' 'default')")"
+    out="#[bg=${le_bg}]#[fg=${le_fg}]${left_edge}${out}"
   fi
 
   if [[ -n "$right_edge" ]]; then
-    local re_fg
+    local re_fg re_bg
     re_fg="$(resolve_fg 'right-edge' "$sep_fg")"
-    out+="#[bg=default]#[fg=${re_fg}]${right_edge}#[bg=default]"
+    # BG for the right-edge glyph cell: same principle as left-edge.
+    re_bg="$(tmux_opt '@opencode-statusline-right-edge-bg' \
+             "$(tmux_opt '@opencode-theme-right-edge-bg' 'default')")"
+    out+="#[bg=${re_bg}]#[fg=${re_fg}]${right_edge}#[bg=default]"
   fi
 
   printf '%s' "${prefix}${out}"
