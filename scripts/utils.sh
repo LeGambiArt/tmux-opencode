@@ -95,11 +95,12 @@ unregister_opencode_plugin() {
 # ---------------------------------------------------------------------------
 
 cleanup_plugin_cache() {
-  local cache_key="${PLUGIN_SPEC/https:\/\//https:\/}"
-  local cache_path="$OPENCODE_CACHE_DIR/packages/$cache_key"
-  [[ -d "$cache_path" ]] || return
-  rm -rf "$cache_path"
-  echo "Removed plugin cache: $cache_path"
+  local cache_base="$OPENCODE_CACHE_DIR/packages"
+  for path in "$cache_base"/tmux-opencode@*; do
+    [[ -d "$path" ]] || continue
+    rm -rf "$path"
+    echo "Removed plugin cache: $path"
+  done
 }
 
 cleanup_state_dir() {

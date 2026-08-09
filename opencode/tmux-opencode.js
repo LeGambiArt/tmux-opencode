@@ -14,6 +14,11 @@ const sessionTitles = new Map()
 // events are dropped immediately — no queuing, no pile-up.
 let updating = false
 
+// Track the session ID last written to the state file so the session
+// poller can detect when the user switches to a different session.
+// OpenCode fires no "session.focused" event, so polling is the only way.
+let lastWrittenSessionID = null
+
 async function safeUpdate(client, $, directory, sessionID) {
   if (updating || !sessionID) return
   updating = true
@@ -126,6 +131,7 @@ async function getGitInfo($, directory) {
 // ---------------------------------------------------------------------------
 
 function writeState(state) {
+  lastWrittenSessionID = state._sessionID ?? lastWrittenSessionID
   fs.mkdirSync(STATE_DIR, { recursive: true })
   const lines = [
     `MODEL="${state.model}"`,
@@ -162,6 +168,7 @@ async function updateStatus(client, $, directory, sessionID) {
     // This ensures switching to a fresh session clears stale values
     // from the previous session immediately.
     writeState({
+      _sessionID:   sessionID,
       model:        '',
       modelDisplay: 'opencode',
       sessionTitle,
@@ -187,6 +194,7 @@ async function updateStatus(client, $, directory, sessionID) {
   )
 
   writeState({
+    _sessionID:   sessionID,
     model:        modelID.replace(/^claude-/, '').slice(0, 20),  // kept for compat
     modelDisplay,
     sessionTitle,
@@ -199,11 +207,33 @@ async function updateStatus(client, $, directory, sessionID) {
 }
 
 // ---------------------------------------------------------------------------
+// Session poller — detects switches when no event fires
+// ---------------------------------------------------------------------------
+// OpenCode has no "session.focused" event, so we poll session.list() every
+// few seconds and trigger an update whenever the most-recently-updated
+// session differs from the one currently shown in the state file.
+
+async function pollActiveSessions(client, $, directory) {
+  try {
+    const res = await client.session.list()
+    const sessions = (res.data ?? [])
+      .sort((a, b) => (b.time?.updated ?? 0) - (a.time?.updated ?? 0))
+    if (!sessions.length) return
+    const mostRecent = sessions[0]
+    if (mostRecent.id !== lastWrittenSessionID)
+      await safeUpdate(client, $, directory, mostRecent.id)
+  } catch {}
+}
+
+// ---------------------------------------------------------------------------
 // Plugin export
 // ---------------------------------------------------------------------------
 
-export const StatuslinePlugin = async ({ client, directory, $ }) => ({
-  event: async ({ event }) => {
+export const StatuslinePlugin = async ({ client, directory, $ }) => {
+  // Poll every 3 s to catch session switches (no event is fired for those).
+  setInterval(() => pollActiveSessions(client, $, directory), 3000)
+
+  return { event: async ({ event }) => {
     // Keep session title cache current from session.updated events so the
     // session name is available immediately on any subsequent write.
     if (event.type === 'session.updated') {
@@ -226,5 +256,5 @@ export const StatuslinePlugin = async ({ client, directory, $ }) => ({
     // safeUpdate drops concurrent calls via mutex so rapid event bursts
     // (tool calls, streaming chunks, etc.) never pile up.
     await safeUpdate(client, $, directory, sessionID)
-  },
-})
+  } }
+}
