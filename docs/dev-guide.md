@@ -93,7 +93,7 @@ set -g @opencode-theme-plugins "model branch progressbar percentage cost"
 | `@opencode-theme-icon-model` | nf-md-crystal_ball (U+F1102) 🔮 | Model icon |
 | `@opencode-theme-icon-branch` | nf-md-source_branch (U+F062C) 🌿 | Branch icon |
 | `@opencode-theme-icon-bar` | nf-fae-brain (U+E28C) 🧠 | Bar icon |
-| `@opencode-theme-icon-cost` | nf-md-coin (U+F0DEA) 🪙 | Cost icon |
+| `@opencode-theme-icon-cost` | nf-md-coin (U+F0DEA) 💰 | Cost icon |
 | `@opencode-theme-icon-session` | nf-md-monitor (U+F0379) 💻 | Session icon |
 | `@opencode-theme-separator` | `│` | Separator character |
 | `@opencode-theme-bar-filled-char` | `█` | Bar filled character |

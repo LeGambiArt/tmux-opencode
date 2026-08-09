@@ -128,7 +128,7 @@ emoji fallback shown below.
     set -g @opencode-statusline-icon-model   "🔮"
     set -g @opencode-statusline-icon-branch  "🌿"
     set -g @opencode-statusline-icon-bar     "🧠"
-    set -g @opencode-statusline-icon-cost    "🪙"
+    set -g @opencode-statusline-icon-cost    "💰"
     set -g @opencode-statusline-icon-session "💻"
 
     # Hide an icon
@@ -139,7 +139,7 @@ emoji fallback shown below.
 | `@opencode-statusline-icon-model` | nf-md-crystal_ball | U+F1102 | `🔮` |
 | `@opencode-statusline-icon-branch` | nf-md-source_branch | U+F062C | `🌿` |
 | `@opencode-statusline-icon-bar` | nf-fae-brain | U+E28C | `🧠` |
-| `@opencode-statusline-icon-cost` | nf-md-coin | U+F0DEA | `🪙` |
+| `@opencode-statusline-icon-cost` | nf-md-coin | U+F0DEA | `💰` or `💵` |
 | `@opencode-statusline-icon-session` | nf-md-monitor | U+F0379 | `💻` |
 
 ### Other options
