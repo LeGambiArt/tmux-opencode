@@ -158,20 +158,34 @@ render() {
   [[ -n "$theme_bg" ]] && prefix="#[bg=${theme_bg}]"
 
   local parts=()
-  local plugin bar marks cost_fmt name title fg text_color
+  local plugin bar marks cost_fmt name title fg bg text_color
+
+  # Helper: build a plugin part with optional per-plugin background.
+  # When a bg is set, wrap with #[bg=] and add padding spaces for readability.
+  # When no bg, output plain fg-only text as before.
+  plugin_part() {
+    local pfg="$1" pbg="$2" content="$3"
+    if [[ -n "$pbg" ]]; then
+      printf '%s' "#[bg=${pbg}]#[fg=${pfg}] ${content} "
+    else
+      printf '%s' "#[fg=${pfg}]${content}"
+    fi
+  }
 
   for plugin in $plugins; do
     case "$plugin" in
       model)
         fg="$(resolve_fg 'model' 'colour87')"
+        bg="$(resolve_bg 'model' '')"
         name="${MODEL_DISPLAY:-${MODEL:-opencode}}"
-        parts+=("#[fg=${fg}]${icon_model} ${name}")
+        parts+=("$(plugin_part "$fg" "$bg" "${icon_model} ${name}")")
         ;;
       branch)
         [[ -n "${BRANCH:-}" ]] || continue
         fg="$(resolve_fg 'branch' 'colour141')"
+        bg="$(resolve_bg 'branch' '')"
         marks="$(build_marks)"
-        parts+=("#[fg=${fg}]${icon_branch} ${BRANCH}${marks}")
+        parts+=("$(plugin_part "$fg" "$bg" "${icon_branch} ${BRANCH}${marks}")")
         ;;
       progressbar)
         local fill_color empty_color filled_char empty_char
@@ -191,28 +205,35 @@ render() {
         bar="$(build_bar "${CONTEXT_PCT:-0}" "$bar_width" \
                "$filled_char" "$empty_char" "$fill_color" "$empty_color")"
         # Restore global text colour after bar's two-colour inline codes.
-        # bg is preserved via the prefix anchor set above.
+        bg="$(resolve_bg 'bar' '')"
         text_color="$(global_fg 'colour255')"
-        parts+=("${icon_bar} ${bar}#[fg=${text_color}]")
+        if [[ -n "$bg" ]]; then
+          parts+=("#[bg=${bg}]#[fg=${text_color}] ${icon_bar} ${bar}#[fg=${text_color}] ")
+        else
+          parts+=("${icon_bar} ${bar}#[fg=${text_color}]")
+        fi
         ;;
       percentage)
         fg="$(resolve_fg 'pct' "$(bar_color "${CONTEXT_PCT:-0}")")"
+        bg="$(resolve_bg 'pct' '')"
         # Single % — tmux does NOT strftime-expand #(command) output
-        parts+=("#[fg=${fg}]${CONTEXT_PCT:-0}%")
+        parts+=("$(plugin_part "$fg" "$bg" "${CONTEXT_PCT:-0}%")")
         ;;
       cost)
         fg="$(resolve_fg 'cost' 'colour114')"
+        bg="$(resolve_bg 'cost' '')"
         cost_fmt="$(format_cost "${COST_USD:-0}")"
-        parts+=("#[fg=${fg}]${icon_cost} \$${cost_fmt}")
+        parts+=("$(plugin_part "$fg" "$bg" "${icon_cost} \$${cost_fmt}")")
         ;;
       session)
         [[ -n "${SESSION_TITLE:-}" ]] || continue
         fg="$(resolve_fg 'session' 'colour243')"
+        bg="$(resolve_bg 'session' '')"
         title="${SESSION_TITLE:0:$session_max}"
         if [[ "${#SESSION_TITLE}" -gt "$session_max" ]]; then
           title="${title}…"
         fi
-        parts+=("#[fg=${fg}]${icon_session} ${title}")
+        parts+=("$(plugin_part "$fg" "$bg" "${icon_session} ${title}")")
         ;;
       *) continue ;;
     esac
@@ -220,8 +241,10 @@ render() {
 
   local sep_fg
   sep_fg="$(resolve_fg 'separator' 'colour243')"
-  # No trailing colour reset — bg anchor from prefix keeps the theme background.
-  local sep_str="#[fg=${sep_fg}] ${separator} "
+  # Restore theme bg in separator so per-plugin bg blocks are visually separated.
+  local sep_bg_reset=""
+  [[ -n "$theme_bg" ]] && sep_bg_reset="#[bg=${theme_bg}]"
+  local sep_str="${sep_bg_reset}#[fg=${sep_fg}] ${separator} "
 
   local out="" i
   for (( i=0; i<${#parts[@]}; i++ )); do
