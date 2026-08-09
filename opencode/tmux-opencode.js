@@ -69,17 +69,23 @@ async function getTotalCost(messages) {
 }
 
 // Returns the tokens currently occupying the context window.
-// We look at only the LAST assistant message because each API call sends
-// the full conversation history as input — so the last message's input-side
-// tokens (non-cached + cache reads + cache writes) represent the current
-// context window usage, matching what OpenCode shows in its UI.
-// Output tokens are excluded: they are generated, not consumed from the window.
+// Each API call sends the full conversation history as input, so the
+// most recent COMPLETED assistant message's input-side tokens represent
+// the current context window usage.
+//
+// We walk backwards rather than always using the last message because the
+// newest message may still be streaming — its token counts are not committed
+// until the response completes, so reading it would yield 0 and temporarily
+// drop the displayed percentage to 0% mid-conversation.
 function getContextTokens(messages) {
   if (!messages.length) return 0
-  const last = messages[messages.length - 1]
-  const t = last.tokens ?? {}
-  const c = t.cache ?? {}
-  return (t.input ?? 0) + (c.read ?? 0) + (c.write ?? 0)
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const t = messages[i].tokens ?? {}
+    const c = t.cache ?? {}
+    const total = (t.input ?? 0) + (c.read ?? 0) + (c.write ?? 0)
+    if (total > 0) return total
+  }
+  return 0
 }
 
 // Returns { contextPct, modelDisplay } — single providers() call covers both
