@@ -121,6 +121,36 @@ format_cost() {
 # ---------------------------------------------------------------------------
 
 render() {
+
+  # Helper: build a plugin part with optional per-plugin background.
+  # When a bg is set, adds a leading space (block padding). No trailing space
+  # so that an empty separator glues blocks directly together.
+  # When no bg, plain fg-only text — the separator provides spacing.
+  plugin_part() {
+    local pfg="$1" pbg="$2" content="$3"
+    if [[ -n "$pbg" ]]; then
+      printf '%s' "#[bg=${pbg}]#[fg=${pfg}] ${content}"
+    else
+      printf '%s' "#[fg=${pfg}]${content}"
+    fi
+  }
+
+  # get_separator: resolves the separator properly, distinguishing between
+  # "explicitly set to empty string" (circle theme) and "not set" (fallback).
+  # tmux show-option -gq prints the key line when set (even to ""), nothing
+  # when not set — unlike -gqv which cannot distinguish the two cases.
+  get_separator() {
+    if [[ -n "$(tmux show-option -gq '@opencode-statusline-separator' 2>/dev/null)" ]]; then
+      tmux show-option -gqv '@opencode-statusline-separator' 2>/dev/null || true
+      return
+    fi
+    if [[ -n "$(tmux show-option -gq '@opencode-theme-separator' 2>/dev/null)" ]]; then
+      tmux show-option -gqv '@opencode-theme-separator' 2>/dev/null || true
+      return
+    fi
+    printf '%s' " │ "
+  }
+
   local plugins bar_width session_max separator
 
   plugins="$(resolve_opt \
@@ -133,9 +163,7 @@ render() {
   session_max="$(resolve_opt \
     '@opencode-statusline-session-max-len' \
     '@opencode-theme-session-max-len' '20')"
-  separator="$(resolve_opt \
-    '@opencode-statusline-separator' \
-    '@opencode-theme-separator' '│')"
+  separator="$(get_separator)"
 
   local icon_model icon_branch icon_bar icon_cost icon_session
   icon_model="$(resolve_opt \
@@ -159,18 +187,6 @@ render() {
 
   local parts=()
   local plugin bar marks cost_fmt name title fg bg text_color
-
-  # Helper: build a plugin part with optional per-plugin background.
-  # When a bg is set, wrap with #[bg=] and add padding spaces for readability.
-  # When no bg, output plain fg-only text as before.
-  plugin_part() {
-    local pfg="$1" pbg="$2" content="$3"
-    if [[ -n "$pbg" ]]; then
-      printf '%s' "#[bg=${pbg}]#[fg=${pfg}] ${content} "
-    else
-      printf '%s' "#[fg=${pfg}]${content}"
-    fi
-  }
 
   for plugin in $plugins; do
     case "$plugin" in
@@ -241,18 +257,16 @@ render() {
 
   local sep_fg
   sep_fg="$(resolve_fg 'separator' 'colour243')"
-  # Restore theme bg in separator so per-plugin bg blocks are visually separated.
+  # Restore theme bg between plugin parts.
   local sep_bg_reset=""
   [[ -n "$theme_bg" ]] && sep_bg_reset="#[bg=${theme_bg}]"
-  # When separator contains only whitespace (or is empty), skip the pipe
-  # character and surrounding spaces — just reset bg with the separator value.
-  # This allows themes like circle (separator=" ") to produce a minimal gap
-  # instead of the full " │ " treatment.
+  # separator is emitted as-is — spaces are the separator value's responsibility.
+  # default.conf uses " │ " (spaces embedded). circle uses "" (glue blocks).
   local sep_str
-  if [[ -n "${separator// }" ]]; then
-    sep_str="${sep_bg_reset}#[fg=${sep_fg}] ${separator} "
+  if [[ -n "$separator" ]]; then
+    sep_str="${sep_bg_reset}#[fg=${sep_fg}]${separator}"
   else
-    sep_str="${sep_bg_reset}${separator}"
+    sep_str="${sep_bg_reset}"
   fi
 
   local out="" i
