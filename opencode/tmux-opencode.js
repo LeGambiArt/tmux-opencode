@@ -2,7 +2,7 @@ import fs   from 'fs'
 import path from 'path'
 import os   from 'os'
 
-const STATE_DIR  = path.join(os.homedir(), '.config', 'opencode')
+const STATE_DIR  = path.join(os.homedir(), '.config', 'opencode', 'plugins', 'tmux-opencode')
 const STATE_PATH = path.join(STATE_DIR, 'statusline-state.sh')
 
 function shortModelName(modelID) {

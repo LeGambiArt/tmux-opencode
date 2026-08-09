@@ -11,33 +11,39 @@ get_tmux_option() {
   [[ -z "$value" ]] && echo "$default" || echo "$value"
 }
 
-ensure_esm_package_json() {
-  local dir="$1"
-  local pkg="$dir/package.json"
+opencode_register_plugin() {
+  local config_dir="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+  local plugin_spec="tmux-opencode@git+https://github.com/mrbrandao/tmux-opencode.git"
 
-  [[ -f "$pkg" ]] || { echo '{"type":"module"}' > "$pkg"; return; }
+  local config_file=""
+  [[ -f "$config_dir/opencode.jsonc" ]] && config_file="$config_dir/opencode.jsonc"
+  [[ -z "$config_file" && -f "$config_dir/opencode.json" ]] && \
+    config_file="$config_dir/opencode.json"
 
-  local type_val
-  type_val="$(jq -r '.type // empty' "$pkg" 2>/dev/null)"
-  [[ "$type_val" == "module" ]] && return
+  [[ -z "$config_file" ]] && {
+    config_file="$config_dir/opencode.jsonc"
+    printf '{"plugin":["%s"]}\n' "$plugin_spec" > "$config_file"
+    echo "Created $config_file with tmux-opencode plugin entry."
+    return
+  }
+
+  grep -qF "$plugin_spec" "$config_file" && return
 
   ! command -v jq &>/dev/null && {
-    echo "Warning: jq not found. Add \"type\":\"module\" to $pkg manually." >&2
+    echo "Add to $config_file manually:"
+    printf '  "plugin": ["%s"]\n' "$plugin_spec"
     return
   }
 
   local tmp
   tmp="$(mktemp)"
-  jq '. + {"type":"module"}' "$pkg" > "$tmp" && mv "$tmp" "$pkg"
-}
+  jq --arg spec "$plugin_spec" '
+    if .plugin then .plugin += [$spec]
+    else . + {"plugin": [$spec]}
+    end
+  ' "$config_file" > "$tmp" && mv "$tmp" "$config_file"
 
-install_opencode_plugin() {
-  local config_dir="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
-  local plugin_dir="$config_dir/plugins"
-  mkdir -p "$plugin_dir"
-  ensure_esm_package_json "$plugin_dir"
-  cp "$PLUGIN_DIR/opencode/tmux-opencode.js" \
-    "$plugin_dir/tmux-opencode.js"
+  echo "Added tmux-opencode to plugin list in $config_file"
 }
 
 detect_dracula() {

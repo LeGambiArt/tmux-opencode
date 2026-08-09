@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-STATE="$HOME/.config/opencode/statusline-state.sh"
+STATE="$HOME/.config/opencode/plugins/tmux-opencode/statusline-state.sh"
 
 [[ -f "$STATE" ]] || exit 0
 
