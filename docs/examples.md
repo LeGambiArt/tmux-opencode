@@ -1,286 +1,164 @@
-# Examples
+# Theme Gallery
 
-Visual showcase of all available presets. Each preset includes a ready-to-use
-config you can copy into `~/.tmux.conf` or source directly.
+All 13 built-in themes for tmux-opencode. Select any theme with:
 
-> **Font note** — presets 1–10 use [Nerd Font](https://www.nerdfonts.com)
-> glyphs for icons and progress bar characters. Install any Nerd Font
-> (JetBrainsMono NF and Hack NF are tested) and configure your terminal
-> emulator to use it. Preset 0 works with any font; swap to emoji fallback
-> icons if glyphs render as boxes (see [Icons](../README.md#icons)).
+    set -g @opencode-tmux-theme "<name>"
 
----
+Screenshots are taken after `tmux source-file ~/.tmux.conf` with a live
+OpenCode session running.
 
-## Preset 0 — Raw tmux
-
-Plain tmux, no theme plugin required. Default gradient bar.
-
-![Preset 0 – Raw tmux](../img/preset-0-raw-tmux.png)
-
-```bash
-# source examples/preset-0-raw-tmux.conf
-set -g @opencode-statusline-refresh 5
-set -g @opencode-statusline-plugins "model branch progressbar percentage cost"
-
-set -gu @opencode-statusline-bar-filled-color
-set -g  @opencode-statusline-bar-filled-char "█"
-set -g  @opencode-statusline-bar-empty-char  "░"
-set -g  @opencode-statusline-bar-empty-color "colour236"
-```
+> **Font note** — most themes require a [Nerd Font](https://www.nerdfonts.com).
+> The `neon-punk` theme uses emoji icons and works without Nerd Fonts.
+> If glyphs render as boxes, either install a Nerd Font or switch icons:
+> `set -g @opencode-statusline-icon-model "✨"`
 
 ---
 
-## Preset 1 — Classic
+## default
 
-Dracula theme · white text on dark-grey segment · gradient block bar.
+Plain tmux colours. Nerd Font icons. Green→yellow→red gradient bar.
 
-![Preset 1 – Classic](../img/preset-1-classic.png)
+![default theme](../img/theme-default.png)
 
-> Requires: Dracula tmux theme + `custom:opencode-statusline` in `@dracula-plugins`
-
-```bash
-# source examples/preset-1-classic.conf
-set -g @dracula-plugins              "cpu-usage battery time custom:opencode-statusline"
-set -g @dracula-custom-plugin-colors "white dark_gray"
-
-set -g @opencode-statusline-refresh  5
-set -g @opencode-statusline-plugins  "model branch progressbar percentage cost"
-
-set -gu @opencode-statusline-bar-filled-color
-set -g  @opencode-statusline-bar-filled-char "█"
-set -g  @opencode-statusline-bar-empty-char  "░"
-set -g  @opencode-statusline-bar-empty-color "colour236"
-set -g  @opencode-statusline-text-color      "colour255"
-```
+    set -g @opencode-tmux-theme "default"
 
 ---
 
-## Preset 2 — Session Dashboard
+## classic
 
-Dracula theme · dark text on green segment · session-title aware.
+Dark charcoal background, white text, block bar with dynamic gradient.
 
-![Preset 2 – Session Dashboard](../img/preset-2-session-dashboard.png)
+![classic theme](../img/theme-classic.png)
 
-> Requires: Dracula tmux theme + `custom:opencode-statusline` in `@dracula-plugins`
-
-```bash
-# source examples/preset-2-session-dashboard.conf
-set -g @dracula-plugins              "cpu-usage battery time custom:opencode-statusline"
-set -g @dracula-custom-plugin-colors "dark_gray green"
-
-set -g @opencode-statusline-refresh 2
-set -g @opencode-statusline-plugins "session model branch progressbar percentage cost"
-
-set -g @opencode-statusline-bar-filled-color "colour46"
-set -g @opencode-statusline-bar-filled-char  "█"
-set -g @opencode-statusline-bar-empty-char   "░"
-set -g @opencode-statusline-bar-empty-color  "colour22"
-set -g @opencode-statusline-text-color       "colour232"
-```
+    set -g @opencode-tmux-theme "classic"
 
 ---
 
-## Preset 3 — Neon Punk
+## dashboard
 
-Dracula theme · white text on pink segment · emoji icons.
+Dark green background, bright-green text. Includes session title.
 
-![Preset 3 – Neon Punk](../img/preset-3-neon-punk.png)
+![dashboard theme](../img/theme-dashboard.png)
 
-> Requires: Dracula tmux theme + `custom:opencode-statusline` in `@dracula-plugins`
-
-```bash
-# source examples/preset-3-neon-punk.conf
-set -g @dracula-plugins              "cpu-usage battery time custom:opencode-statusline"
-set -g @dracula-custom-plugin-colors "white pink"
-
-set -g @opencode-statusline-refresh 2
-set -g @opencode-statusline-plugins "session model progressbar percentage cost"
-
-set -g @opencode-statusline-bar-filled-color "colour201"
-set -g @opencode-statusline-bar-filled-char  "█"
-set -g @opencode-statusline-bar-empty-char   "░"
-set -g @opencode-statusline-bar-empty-color  "colour236"
-set -g @opencode-statusline-text-color       "colour255"
-
-set -g @opencode-statusline-icon-model   "✨"
-set -g @opencode-statusline-icon-bar     "🧠"
-set -g @opencode-statusline-icon-cost    "💰"
-set -g @opencode-statusline-icon-session "💻"
-```
+    set -g @opencode-tmux-theme "dashboard"
 
 ---
 
-## Preset 4 — Steel Blue
+## neon-punk
 
-Dracula theme · white text on dark-purple segment · steel-blue fixed bar.
+True black, hot-pink text. 80s spray-paint wall neon. Emoji icons.
+No Nerd Font required for icons.
 
-![Preset 4 – Steel Blue](../img/preset-4-steel-blue.png)
+![neon-punk theme](../img/theme-neon-punk.png)
 
-> Requires: Dracula tmux theme + `custom:opencode-statusline` in `@dracula-plugins`
-
-```bash
-# source examples/preset-4-steel-blue.conf
-set -g @dracula-plugins              "cpu-usage battery time custom:opencode-statusline"
-set -g @dracula-custom-plugin-colors "white dark_purple"
-
-set -g @opencode-statusline-refresh 5
-set -g @opencode-statusline-plugins "model branch progressbar percentage cost"
-
-set -g @opencode-statusline-bar-filled-color "colour81"
-set -g @opencode-statusline-bar-filled-char  "█"
-set -g @opencode-statusline-bar-empty-char   "░"
-set -g @opencode-statusline-bar-empty-color  "colour237"
-set -g @opencode-statusline-text-color       "colour255"
-```
+    set -g @opencode-tmux-theme "neon-punk"
 
 ---
 
-## Preset 5 — Orange Dots
+## cyberpunk
 
-Dracula theme · dark text on orange segment · dot-style bar.
+Dark navy, neon-yellow text, diamond bar. Night-city aesthetic.
 
-![Preset 5 – Orange Dots](../img/preset-5-orange-dots.png)
+![cyberpunk theme](../img/theme-cyberpunk.png)
 
-> Requires: Dracula tmux theme + `custom:opencode-statusline` in `@dracula-plugins`
-
-```bash
-# source examples/preset-5-orange-dots.conf
-set -g @dracula-plugins              "cpu-usage battery time custom:opencode-statusline"
-set -g @dracula-custom-plugin-colors "dark_gray orange"
-
-set -g @opencode-statusline-refresh 5
-set -g @opencode-statusline-plugins "model branch progressbar percentage cost"
-
-set -g @opencode-statusline-bar-filled-color "colour214"
-set -g @opencode-statusline-bar-filled-char  "●"
-set -g @opencode-statusline-bar-empty-char   "○"
-set -g @opencode-statusline-bar-empty-color  "colour236"
-set -g @opencode-statusline-text-color       "colour232"
-```
+    set -g @opencode-tmux-theme "cyberpunk"
 
 ---
 
-## Preset 6 — Minimal
+## retrowave
 
-Dracula theme · cyan text on dark-grey segment · no progress bar.
+Deep purple, hot-pink text, electric-cyan rectangular bar. Synthwave sunset.
 
-![Preset 6 – Minimal](../img/preset-6-minimal.png)
+![retrowave theme](../img/theme-retrowave.png)
 
-> Requires: Dracula tmux theme + `custom:opencode-statusline` in `@dracula-plugins`
-
-```bash
-# source examples/preset-6-minimal.conf
-set -g @dracula-plugins              "cpu-usage battery time custom:opencode-statusline"
-set -g @dracula-custom-plugin-colors "cyan dark_gray"
-
-set -g @opencode-statusline-refresh 5
-set -g @opencode-statusline-plugins "model percentage cost"
-```
+    set -g @opencode-tmux-theme "retrowave"
 
 ---
 
-## Preset 7 — Red Alert
+## steel
 
-Raw tmux · white background · bright-red text · heavy-circle `▰▱` bar.
+Dark background, steel-blue text, block bar.
 
-![Preset 7 – Red Alert](../img/preset-7-red-alert.png)
+![steel theme](../img/theme-steel.png)
 
-> Requires: Nerd Font (JetBrainsMono NF or Hack NF)  
-> Raw tmux — no Dracula theme needed.
-
-```bash
-# source examples/preset-7-red-alert.conf
-set -g @opencode-statusline-refresh 2
-set -g @opencode-statusline-plugins "session model progressbar percentage cost"
-
-set -g @opencode-statusline-bar-filled-color "colour196"
-set -g @opencode-statusline-bar-filled-char  "▰"
-set -g @opencode-statusline-bar-empty-char   "▱"
-set -g @opencode-statusline-bar-empty-color  "colour217"
-set -g @opencode-statusline-text-color       "colour196"
-
-set -g status-style        "bg=colour255,fg=colour196"
-set -g status-right-length 200
-set -g status-right        "#[bg=colour255,fg=colour196] #(~/.tmux/plugins/tmux/scripts/opencode-statusline) "
-```
+    set -g @opencode-tmux-theme "steel"
 
 ---
 
-## Preset 8 — Matrix
+## orange
 
-Raw tmux · true-black background · bright-green text · heavy-circle `▰▱` bar.
+Grey background, warm-orange text, dot `●○` progress bar.
 
-![Preset 8 – Matrix](../img/preset-8-matrix.png)
+![orange theme](../img/theme-orange.png)
 
-> Requires: Nerd Font (JetBrainsMono NF or Hack NF)  
-> Raw tmux — no Dracula theme needed.
-
-```bash
-# source examples/preset-8-matrix.conf
-set -g @opencode-statusline-refresh 2
-set -g @opencode-statusline-plugins "session model progressbar percentage cost"
-
-set -g @opencode-statusline-bar-filled-color "colour46"
-set -g @opencode-statusline-bar-filled-char  "▰"
-set -g @opencode-statusline-bar-empty-char   "▱"
-set -g @opencode-statusline-bar-empty-color  "colour22"
-set -g @opencode-statusline-text-color       "colour46"
-
-set -g status-style        "bg=colour16,fg=colour46"
-set -g status-right-length 200
-set -g status-right        "#[bg=colour16,fg=colour46] #(~/.tmux/plugins/tmux/scripts/opencode-statusline) "
-```
+    set -g @opencode-tmux-theme "orange"
 
 ---
 
-## Preset 9 — Dracula Glyph
+## minimal
 
-Raw tmux · deep-purple background · cyan text · green-filled `◆◇` diamond bar.
+Dark background, cyan text. No progress bar — maximum width efficiency.
 
-![Preset 9 – Dracula Glyph](../img/preset-9-dracula-glyph.png)
+![minimal theme](../img/theme-minimal.png)
 
-> Requires: Nerd Font (JetBrainsMono NF or Hack NF)  
-> Raw tmux — no Dracula theme needed.
-
-```bash
-# source examples/preset-9-dracula-glyph.conf
-set -g @opencode-statusline-refresh 2
-set -g @opencode-statusline-plugins "session model progressbar percentage cost"
-
-set -g @opencode-statusline-bar-filled-color "colour84"
-set -g @opencode-statusline-bar-filled-char  "◆"
-set -g @opencode-statusline-bar-empty-char   "◇"
-set -g @opencode-statusline-bar-empty-color  "colour60"
-set -g @opencode-statusline-text-color       "colour117"
-
-set -g status-style        "bg=colour53,fg=colour117"
-set -g status-right-length 200
-set -g status-right        "#[bg=colour53,fg=colour117] #(~/.tmux/plugins/tmux/scripts/opencode-statusline) "
-```
+    set -g @opencode-tmux-theme "minimal"
 
 ---
 
-## Preset 10 — Dracula Purple + Green
+## redalert
 
-Raw tmux · dark Dracula background · bright-green text · light-purple `▮▯` rectangular bar.
+White background, bright-red text, heavy-circle bar. Urgency signalling.
 
-![Preset 10 – Dracula Purple + Green](../img/preset-10-dracula-purple-green.png)
+![redalert theme](../img/theme-redalert.png)
 
-> Requires: Nerd Font (JetBrainsMono NF or Hack NF)  
-> Raw tmux — no Dracula theme needed.
+    set -g @opencode-tmux-theme "redalert"
 
-```bash
-# source examples/preset-10-dracula-purple-green.conf
-set -g @opencode-statusline-refresh 2
-set -g @opencode-statusline-plugins "session model progressbar percentage cost"
+---
 
-set -g @opencode-statusline-bar-filled-color "colour141"
-set -g @opencode-statusline-bar-filled-char  "▮"
-set -g @opencode-statusline-bar-empty-char   "▯"
-set -g @opencode-statusline-bar-empty-color  "colour60"
-set -g @opencode-statusline-text-color       "colour84"
+## matrix
 
-set -g status-style        "bg=colour236,fg=colour84"
-set -g status-right-length 200
-set -g status-right        "#[bg=colour236,fg=colour84] #(~/.tmux/plugins/tmux/scripts/opencode-statusline) "
-```
+True black, bright-green text, heavy-circle bar. Matrix digital-rain feel.
+
+![matrix theme](../img/theme-matrix.png)
+
+    set -g @opencode-tmux-theme "matrix"
+
+---
+
+## dracula
+
+Dracula colour palette (no Dracula plugin required). Deep purple, cyan text,
+green diamond bar.
+
+![dracula theme](../img/theme-dracula.png)
+
+    set -g @opencode-tmux-theme "dracula"
+
+---
+
+## purple
+
+Dark Dracula-inspired background, light-purple text, purple rectangular bar.
+
+![purple theme](../img/theme-purple.png)
+
+    set -g @opencode-tmux-theme "purple"
+
+---
+
+## Customising a theme
+
+Override any individual setting after setting the theme:
+
+    set -g @opencode-tmux-theme "matrix"
+
+    # Use a brighter green for cost only
+    set -g @opencode-statusline-cost-fg "colour82"
+
+    # Change bar width
+    set -g @opencode-statusline-bar-width "15"
+
+    # Use emoji instead of Nerd Font icon
+    set -g @opencode-statusline-icon-model "✨"
+
+User options (`@opencode-statusline-*`) always override theme defaults.
