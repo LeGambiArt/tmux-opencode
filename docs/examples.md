@@ -1,6 +1,6 @@
 # Theme Gallery
 
-All 14 built-in themes for tmux-opencode. Select any theme with:
+All 15 built-in themes for tmux-opencode. Select any theme with:
 
     set -g @opencode-tmux-theme "<name>"
 
@@ -163,6 +163,18 @@ and slate empty.
 ![purple theme](../img/theme-purple.png)
 
     set -g @opencode-tmux-theme "purple"
+
+---
+
+## circle
+
+Deep ocean background, each plugin in its own distinct neon colour (magenta
+session, cyan model, green branch, yellow percentage, orange cost). Dot `●○`
+progress bar — the theme's namesake. Cost uses the 💵 money-bill icon.
+
+![circle theme](../img/theme-circle.png)
+
+    set -g @opencode-tmux-theme "circle"
 
 ---
 

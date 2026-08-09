@@ -5,7 +5,7 @@ that adds an OpenCode status bar to tmux. Displays model, git branch,
 context window usage, session cost, and active session name.
 
 Fully standalone — no theme plugin dependency required. Ships with
-14 built-in themes selected with a single option.
+15 built-in themes selected with a single option.
 
 ## Requirements
 
@@ -55,6 +55,7 @@ Available themes:
 | `matrix` | True-black bg, bright-green text, heavy-circle `▰▱` bar |
 | `diamond` | Deep-purple bg, cyan text, diamond `◆◇` bar |
 | `purple` | Dark bg, light-purple text, rectangular `▮▯` bar |
+| `circle` | Deep ocean bg, per-plugin neon colours, dot `●○` bar, 💵 cost |
 
 See the [examples gallery](docs/examples.md) for screenshots of every theme.
 
