@@ -6,9 +6,20 @@ const STATE_DIR  = path.join(os.homedir(), '.config', 'opencode', 'plugins', 'tm
 const STATE_PATH = path.join(STATE_DIR, 'statusline-state.sh')
 
 // Cache session titles received via session.updated events so they are
-// available immediately on the next session.idle write without an extra
-// API call.
+// available immediately on the next write without an extra API call.
 const sessionTitles = new Map()
+
+// Mutex: prevents concurrent updateStatus calls when many events arrive
+// at once (e.g. streaming tool calls). While one update is running, new
+// events are dropped immediately — no queuing, no pile-up.
+let updating = false
+
+async function safeUpdate(client, $, directory, sessionID) {
+  if (updating || !sessionID) return
+  updating = true
+  try { await updateStatus(client, $, directory, sessionID) } catch {}
+  finally { updating = false }
+}
 
 // ---------------------------------------------------------------------------
 // Model display name
@@ -131,25 +142,45 @@ function writeState(state) {
 }
 
 // ---------------------------------------------------------------------------
-// Full state update (triggered by session.idle)
+// Full state update — called by safeUpdate on any event with a session ID
 // ---------------------------------------------------------------------------
 
 async function updateStatus(client, $, directory, sessionID) {
-  const messages = await getMessages(client, sessionID)
-  if (!messages.length) return
-
-  const latest              = messages[messages.length - 1]
-  const { modelID, providerID } = latest
-
-  const [costUsd, totalTokens, git, sessionInfo] = await Promise.all([
-    getTotalCost(messages),
-    getTotalTokens(messages),
+  // Fetch messages, git state, and session info in parallel up front.
+  // git and session info are always needed regardless of message count.
+  const [messages, git, sessionInfo] = await Promise.all([
+    getMessages(client, sessionID),
     getGitInfo($, directory),
     getSessionInfo(client, sessionID),
   ])
 
   // session.updated cache takes priority; fall back to API fetch
   const sessionTitle = sessionTitles.get(sessionID) ?? sessionInfo.title
+
+  if (!messages.length) {
+    // New or empty session: write what we know, reset cost and context.
+    // This ensures switching to a fresh session clears stale values
+    // from the previous session immediately.
+    writeState({
+      model:        '',
+      modelDisplay: 'opencode',
+      sessionTitle,
+      branch:       git.branch,
+      dirty:        git.dirty,
+      staged:       git.staged,
+      contextPct:   0,
+      costUsd:      0,
+    })
+    return
+  }
+
+  const latest = messages[messages.length - 1]
+  const { modelID, providerID } = latest
+
+  const [costUsd, totalTokens] = await Promise.all([
+    getTotalCost(messages),
+    getTotalTokens(messages),
+  ])
 
   const { contextPct, modelDisplay } = await getModelInfo(
     client, providerID, modelID, totalTokens
@@ -173,16 +204,27 @@ async function updateStatus(client, $, directory, sessionID) {
 
 export const StatuslinePlugin = async ({ client, directory, $ }) => ({
   event: async ({ event }) => {
-    // Keep session title cache current so session plugin stays accurate
-    // across session switches without waiting for an idle event.
+    // Keep session title cache current from session.updated events so the
+    // session name is available immediately on any subsequent write.
     if (event.type === 'session.updated') {
       const { id, title } = event.properties?.info ?? {}
       if (id && title) sessionTitles.set(id, title)
-      return
     }
 
-    if (event.type !== 'session.idle') return
-    const { sessionID } = event.properties
-    await updateStatus(client, $, directory, sessionID).catch(() => {})
+    // Extract session ID from any event type.
+    // Different events surface it in different locations:
+    //   session.idle    → event.properties.sessionID
+    //   session.updated → event.properties.info.id
+    //   others          → one of the above, or null (skipped)
+    const sessionID = event.properties?.sessionID
+                   ?? event.properties?.info?.id
+                   ?? null
+
+    if (!sessionID) return
+
+    // Trigger a state write for any event that carries a session ID.
+    // safeUpdate drops concurrent calls via mutex so rapid event bursts
+    // (tool calls, streaming chunks, etc.) never pile up.
+    await safeUpdate(client, $, directory, sessionID)
   },
 })
