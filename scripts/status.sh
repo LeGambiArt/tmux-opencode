@@ -257,9 +257,21 @@ render() {
 
   local sep_fg
   sep_fg="$(resolve_fg 'separator' 'colour243')"
-  # Restore theme bg between plugin parts.
-  local sep_bg_reset=""
-  [[ -n "$theme_bg" ]] && sep_bg_reset="#[bg=${theme_bg}]"
+
+  # Restore bg between plugin parts.
+  # When a global plugin bg (@opencode-theme-bg) is set, all segments share
+  # that bg — so the separator must also use it to stay visually continuous.
+  # Without this, the separator cell inherits the status-bar bg colour, creating
+  # a visible colour break between each segment (not fluid).
+  # Falls back to the status-bar bg when no global plugin bg is defined.
+  local sep_bg_reset="" plugin_bg
+  plugin_bg="$(tmux_opt '@opencode-theme-bg' '')"
+  if [[ -n "$plugin_bg" ]]; then
+    sep_bg_reset="#[bg=${plugin_bg}]"
+  elif [[ -n "$theme_bg" ]]; then
+    sep_bg_reset="#[bg=${theme_bg}]"
+  fi
+
   # separator is emitted as-is — spaces are the separator value's responsibility.
   # default.conf uses " │ " (spaces embedded). circle uses "" (glue blocks).
   local sep_str
@@ -279,28 +291,29 @@ render() {
   # Left edge: rendered before the first segment to avoid collision with
   # adjacent status-right content (clock, window list, etc.).
   # Right edge: rendered after the last segment as a visual closing boundary.
-  # FG colour resolves: @opencode-statusline-*-edge-fg → @opencode-theme-*-edge-fg → sep_fg
+  # FG resolves: @opencode-statusline-*-edge-fg → @opencode-theme-*-edge-fg → sep_fg
+  #
+  # NOTE: resolve_opt / resolve_fg must be used here — NOT raw tmux show-option
+  # with ||. tmux show-option -gqv exits 0 even for unset options (due to -q),
+  # so the || fallback chain never fires and the glyph is silently dropped.
   local left_edge right_edge
-  left_edge="$(tmux show-option -gqv '@opencode-statusline-left-edge'  2>/dev/null || \
-               tmux show-option -gqv '@opencode-theme-left-edge'        2>/dev/null || true)"
-  right_edge="$(tmux show-option -gqv '@opencode-statusline-right-edge' 2>/dev/null || \
-                tmux show-option -gqv '@opencode-theme-right-edge'       2>/dev/null || true)"
+  left_edge="$(resolve_opt \
+    '@opencode-statusline-left-edge' \
+    '@opencode-theme-left-edge' '')"
+  right_edge="$(resolve_opt \
+    '@opencode-statusline-right-edge' \
+    '@opencode-theme-right-edge' '')"
 
   if [[ -n "$left_edge" ]]; then
-    local le_fg
-    le_fg="$(tmux show-option -gqv '@opencode-statusline-left-edge-fg' 2>/dev/null || \
-             tmux show-option -gqv '@opencode-theme-left-edge-fg'       2>/dev/null || \
-             echo "$sep_fg")"
-    local le_bg_reset=""
+    local le_fg le_bg_reset=""
+    le_fg="$(resolve_fg 'left-edge' "$sep_fg")"
     [[ -n "$theme_bg" ]] && le_bg_reset="#[bg=${theme_bg}]"
     out="${le_bg_reset}#[fg=${le_fg}]${left_edge}${out}"
   fi
 
   if [[ -n "$right_edge" ]]; then
     local re_fg
-    re_fg="$(tmux show-option -gqv '@opencode-statusline-right-edge-fg' 2>/dev/null || \
-             tmux show-option -gqv '@opencode-theme-right-edge-fg'       2>/dev/null || \
-             echo "$sep_fg")"
+    re_fg="$(resolve_fg 'right-edge' "$sep_fg")"
     out+="#[bg=default]#[fg=${re_fg}]${right_edge}#[bg=default]"
   fi
 
