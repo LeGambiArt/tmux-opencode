@@ -225,19 +225,27 @@ setup_status_bar() {
   local script="$PLUGIN_DIR/scripts/status.sh"
   local current_right
   current_right="$(tmux show-option -gv 'status-right' 2>/dev/null || true)"
-  # Idempotent: skip if the script is already in status-right
-  [[ "$current_right" == *"$script"* ]] && return
+  # Match ANY tmux-opencode status.sh entry, not just the current PLUGIN_DIR
+  # path. Running from dev vs TPM paths produces different $script values;
+  # matching by content pattern prevents duplicate entries from both paths
+  # being registered independently.
+  [[ "$current_right" == *"tmux-opencode"*"status.sh"* ]] && return
   tmux set-option -ga status-right " #($script)"
   tmux set-option -g  status-right-length 200
 }
 
 teardown_status_bar() {
-  local script="$PLUGIN_DIR/scripts/status.sh"
-  local entry=" #($script)"
   local current_right
   current_right="$(tmux show-option -gv 'status-right' 2>/dev/null || true)"
-  [[ "$current_right" == *"$script"* ]] || return
-  tmux set-option -g status-right "${current_right/$entry/}"
+  # Quick exit if no tmux-opencode entry present at all
+  [[ "$current_right" == *"tmux-opencode"*"status.sh"* ]] || return
+  # Remove ALL tmux-opencode status.sh entries regardless of install path.
+  # Using a pattern instead of exact path handles both dev and TPM paths,
+  # preventing stale entries when the plugin is run from different locations.
+  local new_right
+  new_right="$(printf '%s' "$current_right" | \
+    sed 's| #([^)]*tmux-opencode[^)]*status\.sh)||g')"
+  tmux set-option -g status-right "$new_right"
 }
 
 set_refresh_interval() {
