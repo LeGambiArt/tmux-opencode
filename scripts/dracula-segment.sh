@@ -17,7 +17,7 @@ source "$STATE"
 DEFAULT_ICON_MODEL=$'\U000F08E9'    # ✨  nf-md-globe_model
 DEFAULT_ICON_BRANCH=$'\uEC6F'       # 🌿  nf-cod-git_branch
 DEFAULT_ICON_BAR=$'\uE28C'          # 🧠  nf-fae-brain
-DEFAULT_ICON_COST=$'\uEFC8'         # 💰  nf-fa-money_bill_1_wave
+DEFAULT_ICON_COST=$'\uF0D6'          # 💰  nf-fa-money_bill
 DEFAULT_ICON_SESSION=$'\uEBCA'      # 💻  nf-cod-terminal_bash  (alt: $'\uF489' nf-oct-terminal)
 
 # ---------------------------------------------------------------------------
@@ -40,6 +40,8 @@ build_marks() {
 build_bar() {
   # build_bar pct width filled_char empty_char filled_color empty_color
   # Emits inline #[fg=...] tmux style codes so each half has its own colour.
+  # No trailing reset — the caller appends #[fg=<text-color>] after the bar
+  # so subsequent plugins (percentage, cost) render in the correct colour.
   local pct="${1:-0}"         width="${2:-10}"
   local filled_char="${3:-█}" empty_char="${4:-░}"
   local filled_color="${5:-}" empty_color="${6:-colour236}"
@@ -54,7 +56,6 @@ build_bar() {
     bar+="#[fg=${empty_color}]"
     for (( i=0; i<empty; i++ )); do bar+="${empty_char}"; done
   fi
-  bar+="#[default]"
   echo "$bar"
 }
 
@@ -112,15 +113,19 @@ render() {
         parts+=("${icon_branch} ${BRANCH}${marks}")
         ;;
       progressbar)
-        local fill_color empty_color filled_char empty_char
+        local fill_color empty_color filled_char empty_char text_color
         fill_color="$(tmux_opt '@opencode-statusline-bar-filled-color' '')"
         [[ -z "$fill_color" ]] && fill_color="$(bar_color "${CONTEXT_PCT:-0}")"
-        empty_color="$(tmux_opt '@opencode-statusline-bar-empty-color' 'colour236')"
-        filled_char="$(tmux_opt '@opencode-statusline-bar-filled-char' '█')"
-        empty_char="$(tmux_opt  '@opencode-statusline-bar-empty-char'  '░')"
+        empty_color="$(tmux_opt '@opencode-statusline-bar-empty-color'   'colour236')"
+        filled_char="$(tmux_opt '@opencode-statusline-bar-filled-char'   '█')"
+        empty_char="$(tmux_opt  '@opencode-statusline-bar-empty-char'    '░')"
+        # text-color restores the fg after the two-colour bar so that
+        # subsequent plugins (percentage, cost) are readable.
+        # Set this to match your Dracula segment foreground or terminal fg.
+        text_color="$(tmux_opt  '@opencode-statusline-text-color'        'colour255')"
         bar="$(build_bar "${CONTEXT_PCT:-0}" "$bar_width" \
                "$filled_char" "$empty_char" "$fill_color" "$empty_color")"
-        parts+=("${icon_bar} ${bar}")
+        parts+=("${icon_bar} ${bar}#[fg=${text_color}]")
         ;;
       percentage)
         parts+=("${CONTEXT_PCT:-0}%")

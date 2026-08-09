@@ -154,7 +154,7 @@ the emoji fallback shown in the table below.
 | `@opencode-statusline-icon-model` | nf-md-globe_model | U+F08E9 | `✨` |
 | `@opencode-statusline-icon-branch` | nf-cod-git_branch | U+EC6F | `🌿` |
 | `@opencode-statusline-icon-bar` | nf-fae-brain | U+E28C | `🧠` |
-| `@opencode-statusline-icon-cost` | nf-fa-money_bill_1_wave | U+EFC8 | `💰` |
+| `@opencode-statusline-icon-cost` | nf-fa-money_bill | U+F0D6 | `💰` |
 | `@opencode-statusline-icon-session` | nf-cod-terminal_bash | U+EBCA | `💻` |
 
 **Example — switch to emoji fallbacks:**
@@ -186,6 +186,20 @@ Available Dracula colors: `dark_gray` `gray` `dark_purple` `light_purple`
 `cyan` `green` `orange` `red` `pink` `yellow` `white`
 
 All `@opencode-statusline-*` options work identically in Dracula mode.
+
+## Examples
+
+A gallery of ready-to-use presets with screenshots and full configs is
+available in [`docs/examples.md`](docs/examples.md).
+
+| | | |
+|---|---|---|
+| ![Preset 0](img/preset-0-raw-tmux.png) Raw tmux | ![Preset 1](img/preset-1-classic.png) Classic | ![Preset 2](img/preset-2-session-dashboard.png) Session Dashboard |
+| ![Preset 3](img/preset-3-neon-punk.png) Neon Punk | ![Preset 4](img/preset-4-steel-blue.png) Steel Blue | ![Preset 5](img/preset-5-orange-dots.png) Orange Dots |
+| ![Preset 6](img/preset-6-minimal.png) Minimal | ![Preset 7](img/preset-7-red-alert.png) Red Alert | ![Preset 8](img/preset-8-matrix.png) Matrix |
+| ![Preset 9](img/preset-9-dracula-glyph.png) Dracula Glyph | ![Preset 10](img/preset-10-dracula-purple-green.png) Dracula Purple+Green | |
+
+Each preset has a copy-paste config file in [`examples/`](examples/).
 
 ## License
 
