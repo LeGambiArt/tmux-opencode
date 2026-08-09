@@ -178,6 +178,21 @@ progress bar — the theme's namesake. Cost uses the 💵 money-bill icon.
 
 ---
 
+## dracula
+
+Authentic Dracula palette. Dark `colour234` background, Dracula purple
+`colour141` text, green branch, orange cost, rectangular `▮▯` bar with purple
+fill. Segments flow together on a shared `colour236` pill interior with no
+separator. Solid-triangle edge glyphs (Nerd Font required) create the capsule
+boundary. Set `@opencode-theme-left-edge-bg` to match your adjacent clock or
+battery widget background to eliminate the square artifact.
+
+![dracula theme](../img/theme-dracula.png)
+
+    set -g @opencode-tmux-theme "dracula"
+
+---
+
 ## Customising a theme
 
 Override any individual setting after setting the theme name:

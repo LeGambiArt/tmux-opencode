@@ -56,6 +56,7 @@ Available themes:
 | `diamond` | Deep-purple bg, cyan text, diamond `◆◇` bar |
 | `purple` | Dark bg, light-purple text, rectangular `▮▯` bar |
 | `circle` | Deep ocean bg, per-plugin neon colours, dot `●○` bar, 💵 cost |
+| `dracula` | Dark bg, Dracula purple text, green branch, orange cost, `▮▯` bar, pill edges (Nerd Font) |
 
 See the [examples gallery](docs/examples.md) for screenshots of every theme.
 
