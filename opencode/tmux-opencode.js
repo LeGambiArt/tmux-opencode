@@ -68,25 +68,6 @@ async function getTotalCost(messages) {
   return messages.reduce((sum, m) => sum + (m.cost ?? 0), 0)
 }
 
-// Returns the tokens currently occupying the context window.
-// Each API call sends the full conversation history as input, so the
-// most recent COMPLETED assistant message's input-side tokens represent
-// the current context window usage.
-//
-// We walk backwards rather than always using the last message because the
-// newest message may still be streaming — its token counts are not committed
-// until the response completes, so reading it would yield 0 and temporarily
-// drop the displayed percentage to 0% mid-conversation.
-function getContextTokens(messages) {
-  if (!messages.length) return 0
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const t = messages[i].tokens ?? {}
-    const c = t.cache ?? {}
-    const total = (t.input ?? 0) + (c.read ?? 0) + (c.write ?? 0)
-    if (total > 0) return total
-  }
-  return 0
-}
 
 // Returns { contextPct, modelDisplay } — single providers() call covers both
 async function getModelInfo(client, providerID, modelID, contextTokens) {
@@ -190,29 +171,33 @@ async function updateStatus(client, $, directory, sessionID) {
     return
   }
 
-  const latest = messages[messages.length - 1]
-
-  // Walk backwards to find the most recent message with valid model info.
-  // The current streaming/thinking message may not have providerID/modelID
-  // set yet — using it would cause getModelInfo to fail (no windowSize →
-  // contextPct = 0). Previous completed messages always have valid IDs.
-  let modelRef = latest
+  // Single backward walk: find the most recent COMPLETED message — one with
+  // both valid model IDs and committed token counts. Two separate walks risk
+  // a mismatch: a streaming/thinking message gets modelID assigned at request
+  // time (before tokens commit), so one walk finds model X while the other
+  // finds tokens from model Y → percentage computed against the wrong window.
+  //
+  // cache.write is excluded from the token total: those bytes are written to
+  // the prompt cache for the NEXT turn and are already counted in t.input —
+  // adding them double-counts and inflates the bar toward 100% prematurely.
+  let modelID = '', providerID = '', contextTokens = 0
   for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].providerID && messages[i].modelID) {
-      modelRef = messages[i]
+    const msg = messages[i]
+    const t   = msg.tokens ?? {}
+    const c   = t.cache   ?? {}
+    const total = (t.input ?? 0) + (c.read ?? 0)
+    if (total > 0 && msg.modelID && msg.providerID) {
+      modelID       = msg.modelID
+      providerID    = msg.providerID
+      contextTokens = total
       break
     }
   }
-  const { modelID, providerID } = modelRef
 
-  const [costUsd, contextTokens] = await Promise.all([
+  const [costUsd, { contextPct, modelDisplay }] = await Promise.all([
     getTotalCost(messages),
-    Promise.resolve(getContextTokens(messages)),
+    getModelInfo(client, providerID, modelID, contextTokens),
   ])
-
-  const { contextPct, modelDisplay } = await getModelInfo(
-    client, providerID, modelID, contextTokens
-  )
 
   writeState({
     _sessionID:   sessionID,
