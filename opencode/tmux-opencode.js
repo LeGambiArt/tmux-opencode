@@ -68,19 +68,22 @@ async function getTotalCost(messages) {
   return messages.reduce((sum, m) => sum + (m.cost ?? 0), 0)
 }
 
-async function getTotalTokens(messages) {
-  return messages.reduce((sum, m) => {
-    const t = m.tokens ?? {}
-    const c = t.cache ?? {}
-    return (
-      sum + (t.input ?? 0) + (t.output ?? 0) +
-      (c.read ?? 0) + (c.write ?? 0)
-    )
-  }, 0)
+// Returns the tokens currently occupying the context window.
+// We look at only the LAST assistant message because each API call sends
+// the full conversation history as input — so the last message's input-side
+// tokens (non-cached + cache reads + cache writes) represent the current
+// context window usage, matching what OpenCode shows in its UI.
+// Output tokens are excluded: they are generated, not consumed from the window.
+function getContextTokens(messages) {
+  if (!messages.length) return 0
+  const last = messages[messages.length - 1]
+  const t = last.tokens ?? {}
+  const c = t.cache ?? {}
+  return (t.input ?? 0) + (c.read ?? 0) + (c.write ?? 0)
 }
 
 // Returns { contextPct, modelDisplay } — single providers() call covers both
-async function getModelInfo(client, providerID, modelID, totalTokens) {
+async function getModelInfo(client, providerID, modelID, contextTokens) {
   const res = await client.config.providers()
   const providers = res.data?.providers ?? []
   const provider  = providers.find((p) => p.id === providerID)
@@ -89,7 +92,7 @@ async function getModelInfo(client, providerID, modelID, totalTokens) {
 
   const contextPct = !windowSize
     ? 0
-    : Math.min(100, Math.round((totalTokens / windowSize) * 100))
+    : Math.min(100, Math.round((contextTokens / windowSize) * 100))
 
   const modelDisplay = formatModelDisplay(modelID, model?.name)
 
@@ -184,13 +187,13 @@ async function updateStatus(client, $, directory, sessionID) {
   const latest = messages[messages.length - 1]
   const { modelID, providerID } = latest
 
-  const [costUsd, totalTokens] = await Promise.all([
+  const [costUsd, contextTokens] = await Promise.all([
     getTotalCost(messages),
-    getTotalTokens(messages),
+    Promise.resolve(getContextTokens(messages)),
   ])
 
   const { contextPct, modelDisplay } = await getModelInfo(
-    client, providerID, modelID, totalTokens
+    client, providerID, modelID, contextTokens
   )
 
   writeState({
