@@ -38,13 +38,32 @@ build_marks() {
 }
 
 build_bar() {
-  local pct="${1:-0}" width="${2:-10}"
+  # build_bar pct width filled_char empty_char filled_color empty_color
+  # Emits inline #[fg=...] tmux style codes so each half has its own colour.
+  local pct="${1:-0}"         width="${2:-10}"
+  local filled_char="${3:-█}" empty_char="${4:-░}"
+  local filled_color="${5:-}" empty_color="${6:-colour236}"
   local filled=$(( pct * width / 100 ))
   local empty=$(( width - filled ))
   local bar="" i
-  for (( i=0; i<filled; i++ )); do bar="${bar}█"; done
-  for (( i=0; i<empty;  i++ )); do bar="${bar}░"; done
+  if (( filled > 0 )); then
+    bar+="#[fg=${filled_color}]"
+    for (( i=0; i<filled; i++ )); do bar+="${filled_char}"; done
+  fi
+  if (( empty > 0 )); then
+    bar+="#[fg=${empty_color}]"
+    for (( i=0; i<empty; i++ )); do bar+="${empty_char}"; done
+  fi
+  bar+="#[default]"
   echo "$bar"
+}
+
+bar_color() {
+  local pct="${1:-0}"
+  if   (( pct < 50 )); then echo "colour43";  return; fi
+  if   (( pct < 75 )); then echo "colour221"; return; fi
+  if   (( pct < 85 )); then echo "colour209"; return; fi
+  echo "colour197"
 }
 
 format_cost() {
@@ -93,7 +112,14 @@ render() {
         parts+=("${icon_branch} ${BRANCH}${marks}")
         ;;
       progressbar)
-        bar="$(build_bar "${CONTEXT_PCT:-0}" "$bar_width")"
+        local fill_color empty_color filled_char empty_char
+        fill_color="$(tmux_opt '@opencode-statusline-bar-filled-color' '')"
+        [[ -z "$fill_color" ]] && fill_color="$(bar_color "${CONTEXT_PCT:-0}")"
+        empty_color="$(tmux_opt '@opencode-statusline-bar-empty-color' 'colour236')"
+        filled_char="$(tmux_opt '@opencode-statusline-bar-filled-char' '█')"
+        empty_char="$(tmux_opt  '@opencode-statusline-bar-empty-char'  '░')"
+        bar="$(build_bar "${CONTEXT_PCT:-0}" "$bar_width" \
+               "$filled_char" "$empty_char" "$fill_color" "$empty_color")"
         parts+=("${icon_bar} ${bar}")
         ;;
       percentage)

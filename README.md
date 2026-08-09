@@ -65,6 +65,74 @@ Control which components are shown and in what order. Available names:
     # Context window fill bar width in characters (default: 10)
     set -g @opencode-statusline-bar-width 10
 
+### Bar appearance
+
+Control the characters and colours used for the filled and empty portions of
+the progress bar independently.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `@opencode-statusline-bar-filled-char` | `█` | Character for filled blocks |
+| `@opencode-statusline-bar-empty-char` | `░` | Character for empty blocks |
+| `@opencode-statusline-bar-filled-color` | *(gradient)* | tmux colour for fill; leave unset to keep the green → yellow → red gradient |
+| `@opencode-statusline-bar-empty-color` | `colour236` | tmux colour for empty blocks (`#303030`, dark grey) |
+
+The default empty colour (`colour236`, `#303030`) works on both Dracula's
+`dark_gray` segment background (`#44475a`) and plain dark terminals.
+
+#### Colour reference
+
+tmux accepts colours in three formats:
+
+- **`colourN`** — 256-colour palette number, 0–255 (most portable, works on all
+  tmux versions). See the full table:
+  [256 Colors Cheat Sheet](https://www.ditig.com/256-colors-cheat-sheet).
+- **Named** — `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`,
+  `white`, `default`, and the bright variants (`brightred`, etc.).
+- **Hex `#rrggbb`** — requires tmux ≥ 3.2.
+
+Full colour and style syntax is documented in the
+[tmux manual — STYLES section](https://man7.org/linux/man-pages/man1/tmux.1.html#STYLES).
+
+The grayscale ramp (colours 232–255) is useful for bar tuning:
+
+| colourN | Hex | Brightness | Good for |
+|---------|-----|-----------|---------|
+| `colour232` | `#080808` | 3% | near black |
+| `colour235` | `#262626` | 14% | very dark empty blocks |
+| `colour236` | `#303030` | 18% | **default empty** — Dracula + dark terminals |
+| `colour237` | `#3a3a3a` | 22% | |
+| `colour238` | `#444444` | 26% | ⚠ almost invisible on Dracula dark_gray |
+| `colour239` | `#4e4e4e` | 30% | slightly lighter empty |
+| `colour240` | `#585858` | 34% | visible lighter empty |
+| `colour243` | `#767676` | 46% | mid-grey, good for dash/line style |
+
+#### Preset examples
+
+```bash
+# ── Default: two-tone block bar ──────────────────────────────────────
+# Works on Dracula dark_gray (#44475a) and standard dark terminals.
+# Filled blocks use the green→yellow→red gradient; empty are dark grey.
+set -g @opencode-statusline-bar-filled-char  "█"
+set -g @opencode-statusline-bar-empty-char   "░"
+set -g @opencode-statusline-bar-empty-color  "colour236"   # #303030
+
+# ── Higher contrast: medium-shade empty blocks ────────────────────────
+set -g @opencode-statusline-bar-filled-char  "█"
+set -g @opencode-statusline-bar-empty-char   "▓"
+set -g @opencode-statusline-bar-empty-color  "colour239"   # #4e4e4e
+
+# ── Dash track: ████──────────────────────────────────────────────────
+set -g @opencode-statusline-bar-filled-char  "█"
+set -g @opencode-statusline-bar-empty-char   "─"
+set -g @opencode-statusline-bar-empty-color  "colour243"   # #767676
+
+# ── Fixed fill colour (override the gradient) ─────────────────────────
+set -g @opencode-statusline-bar-filled-color "colour81"    # SteelBlue1  #5fd7ff
+# set -g @opencode-statusline-bar-filled-color "colour80"  # Turquoise   #5fd7d7
+# set -g @opencode-statusline-bar-filled-color "colour213" # Orchid1     #ff87ff
+```
+
 ### Session title length
 
     # Maximum characters shown for session title before truncation (default: 20)
